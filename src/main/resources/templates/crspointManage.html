@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<link href="../css/crspointManage.css" rel="stylesheet" type="text/css">
+<link href="../css/home.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.staticfile.org/jquery/3.4.0/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<script src="../js/jquery.form.js"></script>
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script th:inline = "javascript">
+        $(document).ready(function(){
+            $("#crspointinsertForm").ajaxForm(function (data) {
+                alert(data);
+                location.reload();
+            });
+
+            $("#chapterinsertForm").ajaxForm(function (data) {
+                alert(data);
+                location.reload();
+            });
+
+            $(".chapterDltForm").ajaxForm(function (data) {
+                alert(data);
+                location.reload();
+            });
+
+
+
+            $(".crspointmanagebtn").click(function () {
+                $("#infoid").val($(this).val());
+                $("#infoname").val($(this).text());
+
+                $(".choicelistcontainer").remove();
+                $(".fillinlistcontainer").remove();
+                $(".tflistcontainer").remove();
+                $.post("../point/choicequestion", {
+                    "crspointid": $(this).val()
+                },function (res) {
+                    $.each(res, function (i,val) {
+                        $("#choicetable").append("<tr class = \"choicelistcontainer\">\n" +
+                            "                            <input type=\"hidden\" class=\"choiceqid\" value = \"" + val.qid + "\"/>" +
+                            "                            <td>" + val.qid + "</td>\n" +
+                            "                            <td width='300px'><input type=\"text\" class=\"form-control choiceqname\" value = \"" + val.qname + "\"></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control choicec1\" value = \"" + val.c1 + "\"></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control choicec2\" value = \"" + val.c2 + "\"></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control choicec3\" value = \"" + val.c3 + "\"></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control choicec4\" value = \"" + val.c4 + "\"></td>\n" +
+                            "                            <td width='80px'><select class=\"form-control choiceanswer\">\n" +
+                            "                               <option selected:disabled style=\"display:none\" value = \"" + val.answer + "\">" + val.answer + "</option>\n" +
+                            "                               <option>A</option>\n" +
+                            "                               <option>B</option>\n" +
+                            "                               <option>C</option>\n" +
+                            "                               <option>D</option>\n" +
+                            "                            </select></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control choicescore\" value = \"" + val.score + "\"></td>\n" +
+                            "                            <td><button class = \"btn btn-primary editchoicebtn\">编辑</button></td>\n" +
+                            "                            <td><button class = \"btn btn-danger dltchoicebtn\">删除</button></td>\n" +
+                            "                        </tr>");
+                    })
+                })
+
+                $.post("../point/fillinquestion", {
+                    "crspointid": $(this).val()
+                },function (res) {
+                    $.each(res, function (i,val) {
+                        $("#fillintable").append("<tr class = \"fillinlistcontainer\">\n" +
+                            "                            <input type=\"hidden\" class=\"fillinqid\" value = \"" + val.qid + "\"/>" +
+                            "                            <td>" + val.qid + "</td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control fillinqname\" value = \"" + val.qname + "\"></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control fillinanswer\" value = \"" + val.answer + "\"></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control fillinscore\" value = \"" + val.score + "\"></td>\n" +
+                            "                            <td><button class = \"btn btn-primary editfillinbtn\">编辑</button></td>\n" +
+                            "                            <td><button class = \"btn btn-danger dltfillinbtn\">删除</button></td>\n" +
+                            "                     </tr>");
+                    })
+                })
+
+                $.post("../point/tfquestion", {
+                    "crspointid": $(this).val()
+                },function (res) {
+                    $.each(res, function (i,val) {
+                        $("#tftable").append("<tr class = \"tflistcontainer\">\n" +
+                            "                      <input type=\"hidden\" class=\"tfqid\" value = \"" + val.qid + "\"/>" +
+                            "                      <td>" + val.qid + "</td>\n" +
+                            "                      <td><input type=\"text\" class=\"form-control tfqname\" value = \"" + val.qname + "\"/></td>\n" +
+                            "                            <td width='80px'><select class=\"form-control tfanswer\">\n" +
+                            "                               <option selected:disabled style=\"display:none\" value = \"" + val.answer + "\">" + val.answer + "</option>\n" +
+                            "                               <option>T</option>\n" +
+                            "                               <option>F</option>\n" +
+                            "                            </select></td>\n" +
+                            "                      <td><input type=\"text\" class=\"form-control tfscore\" value = \"" + val.score + "\"/></td>\n" +
+                            "                      <td><button class = \"btn btn-primary edittfbtn\">编辑</button></td>\n" +
+                            "                      <td><button class = \"btn btn-danger dlttfbtn\">删除</button></td>\n" +
+                            "                  </tr>");
+                    })
+                })
+            })
+
+            $("#choicetable").on("click", ".editchoicebtn", function () {
+                $.post("../point/editchoice", {
+                    "qid": $(this).parent().parent().find(".choiceqid").val(),
+                    "qname": $(this).parent().parent().find(".choiceqname").val(),
+                    "c1": $(this).parent().parent().find(".choicec1").val(),
+                    "c2": $(this).parent().parent().find(".choicec2").val(),
+                    "c3": $(this).parent().parent().find(".choicec3").val(),
+                    "c4": $(this).parent().parent().find(".choicec4").val(),
+                    "answer": $(this).parent().parent().find(".choiceanswer").val(),
+                    "score": $(this).parent().parent().find(".choicescore").val()
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+
+            $("#choicetable").on("click", ".dltchoicebtn", function () {
+                $.post("../point/dltchoice", {
+                    "qid": $(this).parent().parent().find(".choiceqid").val(),
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+
+            $("#fillintable").on("click", ".editfillinbtn", function () {
+                $.post("../point/editfillin", {
+                    "qid": $(this).parent().parent().find(".fillinqid").val(),
+                    "qname": $(this).parent().parent().find(".fillinqname").val(),
+                    "answer": $(this).parent().parent().find(".fillinanswer").val(),
+                    "score": $(this).parent().parent().find(".fillinscore").val()
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+
+            $("#fillintable").on("click", ".dltfillinbtn", function () {
+                $.post("../point/dltfillin", {
+                    "qid": $(this).parent().parent().find(".fillinqid").val(),
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+
+            $("#tftable").on("click", ".edittfbtn", function () {
+                $.post("../point/edittf", {
+                    "qid": $(this).parent().parent().find(".tfqid").val(),
+                    "qname": $(this).parent().parent().find(".tfqname").val(),
+                    "answer": $(this).parent().parent().find(".tfanswer").val(),
+                    "score": $(this).parent().parent().find(".tfscore").val()
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+
+            $("#tftable").on("click", ".dlttfbtn", function () {
+                $.post("../point/dlttf", {
+                    "qid": $(this).parent().parent().find(".tfqid").val(),
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+
+            $(".crspointinsertbtn").click(function () {
+                console.log($(this).val());
+                $("#crspointinsertchapterid").val($(this).val());
+            })
+            $(".crspointmanagebtn").click(function () {
+                $(".taskidinputer").val($(this).val());
+
+                document.getElementById("mp4vedio").src = "/vedio/" + $(this).val() + ".mp4";
+                document.getElementById("oggvedio").src = "/vedio/" + $(this).val() + ".mp4";
+                $("#videoplayer")[0].load();
+            })
+        });
+    </script>
+
+    <script>
+        $(document).ready(function(){
+            $("#uploadvediobtn").change(function(){
+                var file = $(this).get(0).files[0];
+                var reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload=function(e){
+                    console.log(e);
+                    $("#videoplayer").get(0).src = e.target.result;
+                }
+            })
+        })
+    </script>
+
+    <script th:inline = "javascript">
+        $(document).ready(function(){
+            /*console.log([[${isExist}]]);
+            console.log([[${theUser}]]);*/
+            if([[${isExist}]]==true){
+                $("#userhead").text([[${theUser.username}]]);
+                $("#userdrag").append("<li><a href=\"/user\">用户中心</a></li>");
+                $("#userdrag").append("<li><a id = \"logout\">登出</a></li>");
+                $("#userprofile").attr("src", "../img/profile/user_" + [[${theUser.getProfile()}]]);
+                $("#logout").click(function () {
+                    $.removeCookie('userid',{ path: '/'});
+                    $.removeCookie('userpassword',{ path: '/'});
+                    $(location).attr('href', '../');
+                });
+            }else{
+                $("#userhead").text("用户");
+                $("#userdrag").append("<li><a href=\"/user/loginuser\">登录</a></li>");
+                $("#userdrag").append("<li><a href=\"/user/insertuser\">注册</a></li>");
+            }
+        });
+    </script>
+
+
+</head>
+<body>
+<div class="top">
+    <ul>
+        <li><a href="../">首页</a></li>
+        <li><a style="background-color: grey;">课程中心</a>
+            <ul>
+                <li><a href="../course">选课中心</a></li>
+                <li><a href="../chapter">已选课程</a></li>
+                <li><a href="../course/manage">课程管理</a></li>
+            </ul>
+        </li>
+        <li><a>考试中心</a>
+            <ul>
+                <li><a href="../exam">我的考试</a></li>
+                <li><a href="../exam/manage">考试管理</a></li>
+            </ul>
+        </li>
+        <li><a>学习记录</a>
+            <ul>
+                <li><a href="../progress">学习进度</a></li>
+                <li><a href="../score">成绩查询</a></li>
+            </ul>
+        </li>
+        <li style="float: right">
+            <a id = "userhead"></a>
+            <ul style="right:0" id = "userdrag" >
+            </ul>
+        </li>
+        <li style="float: right">
+            <img id = "userprofile" src = "../img/profile/user_0.png" class="img-circle" style="width: 40px; height: 40px; margin-top: 5px; margin-left: 50px"/>
+        </li>
+    </ul>
+</div>
+<div class="mainpage">
+    <div class="panel panel-default"  th:each="cptmap:${chapterlist}">
+        <div class="panel-heading">
+            <h4 class="panel-title">
+                <a data-toggle="collapse" th:text = "${cptmap.key.getChaptername()}"  th:href="@{#replycontainer_{filename}(filename=${cptmapStat.count})}"></a>
+            </h4>
+        </div>
+        <div th:id="@{replycontainer_{filename}(filename=${cptmapStat.count})}" class="panel-collapse collapse">
+            <div class="panel-body">
+                <ul th:each="pnt:${cptmap.value}">
+                    <li>
+                        <button class = "btn btn-link crspointmanagebtn" data-toggle="modal" data-target="#crspointManageModal" th:text="${pnt.getcrspointname()}" th:value = "${pnt.getcrspointid()}"></button>
+                    </li>
+                </ul>
+
+                <button class = "btn btn-primary crspointinsertbtn" data-toggle="modal" data-target="#crspointInsertModal" th:value = "${cptmap.key.getChapterid()}">添加知识点</button>
+                <form class="chapterDltForm" th:action="@{../chapter/dlt}" th:method="post">
+                    <input type="hidden" th:value = "${cptmap.key.getChapterid()}" name="chapterid"/>
+                    <button class = "btn btn-danger">删除章节</button>
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+    <button class = "btn btn-primary" data-toggle="modal" data-target="#chapterInsertModal">添加章节</button>
+
+    <div class="modal fade" id="crspointManageModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="width:1100px">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="crspointManageModalLabel">知识点管理</h4>
+                </div>
+                <div class="modal-body">
+                    <ul id="myTab" class="nav nav-tabs nav-justified">
+                        <li class="active">
+                            <a href="#infocontainer" data-toggle="tab">
+                                信息
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#videocontainer" data-toggle="tab">
+                                视频
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#taskcontainer" data-toggle="tab">
+                                测验
+                            </a>
+                        </li>
+                    </ul>
+                    <div id="myTabContent" class="tab-content">
+                        <div class="tab-pane fade in active" id="infocontainer">
+                            <div style="width: 50%; margin: 0 auto;">
+                                <form th:action="@{../point/editinfo}" th:method="post">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">知识点id</span>
+                                        <input type="text" class="form-control" name = "crspointid" id = "infoid" readonly="readonly">
+                                    </div>
+                                    <div class="input-group">
+                                        <span class="input-group-addon">知识点名</span>
+                                        <input type="text" class="form-control" id = "infoname" name = "crspointname">
+                                    </div>
+                                    <button type = "submit" class = "btn btn-primary">保存</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="videocontainer">
+                            <video id="videoplayer" width="600" height="400" align="center"  controls>
+                                <source src="/vedio/1.mp4" id = "mp4vedio" type="video/mp4">
+                                <source src="/vedio/1.ogg" id = "oggvedio" type="video/ogg">
+                                <source src="/vedio/1.mp4" type="video/mp4">
+                                您的浏览器不支持 HTML5 video 标签。
+                            </video>
+                            <form th:action="@{../point/uploadvideo}" th:method="post" enctype="multipart/form-data">
+                                <input class = "taskidinputer" type="hidden" name="crspointid"/>
+                                <input type="file" id = "uploadvediobtn" accept="video/*" name="videofile"/>
+                                <button type="submit" class = "btn btn-primary">保存</button>
+                            </form>
+
+                        </div>
+                        <div class="tab-pane fade" id="taskcontainer">
+                            <ul id="taskTab" class="nav nav-tabs nav-justified">
+                                <li>
+                                    <a href="#choicecontainer" data-toggle="tab">
+                                        单选题
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#fillincontainer" data-toggle="tab">
+                                        填空题
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#TFcontainer" data-toggle="tab">
+                                        判断题
+                                    </a>
+                                </li>
+                            </ul>
+                            <div id="TabContent" class="tab-content">
+                                <div class="tab-pane fade in active" id="choicecontainer">
+                                    <table id = "choicetable" class="table table-condensed table-hover table-striped" >
+                                        <tr>
+                                            <td>题目id</td>
+                                            <td>题目</td>
+                                            <td>A</td>
+                                            <td>B</td>
+                                            <td>C</td>
+                                            <td>D</td>
+                                            <td>答案</td>
+                                            <td>分值</td>
+                                        </tr>
+                                    </table>
+                                    <button class = "btn btn-primary"  data-toggle="collapse" data-target="#choiceinsert">添加题目</button>
+                                    <div id="choiceinsert" class="collapse">
+                                        <table id = "choiceinserttable" class="table table-condensed table-hover table-striped" >
+                                            <tr>
+                                                <td>题目</td>
+                                                <td>A</td>
+                                                <td>B</td>
+                                                <td>C</td>
+                                                <td>D</td>
+                                                <td>答案</td>
+                                                <td>分值</td>
+                                                <td>保存</td>
+                                            </tr>
+                                            <tr>
+                                                <form th:action="@{../point/insertchoice}" th:method="post">
+                                                    <input class = "taskidinputer" type="hidden" name="taskid"/>
+                                                    <td><input type="text" class="form-control" name = "qname"/></td>
+                                                    <td><input type="text" class="form-control" name = "c1"/></td>
+                                                    <td><input type="text" class="form-control" name = "c2"/></td>
+                                                    <td><input type="text" class="form-control" name = "c3"/></td>
+                                                    <td><input type="text" class="form-control" name = "c4"/></td>
+                                                    <td><input type="text" class="form-control" name = "answer"/></td>
+                                                    <td><input type="text" class="form-control" name = "score"/></td>
+                                                    <td><button type = "submit" class = "btn btn-primary">保存</button></td>
+                                                </form>
+
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="fillincontainer">
+                                    <table id = "fillintable" class="table table-condensed table-hover table-striped" >
+                                        <tr>
+                                            <td>题目id</td>
+                                            <td>题目</td>
+                                            <td>答案</td>
+                                            <td>分值</td>
+                                        </tr>
+                                    </table>
+                                    <button class = "btn btn-primary"  data-toggle="collapse" data-target="#fillininsert">添加题目</button>
+                                    <div id="fillininsert" class="collapse">
+                                        <table id = "fillininserttable" class="table table-condensed table-hover table-striped" >
+                                            <tr>
+                                                <td>题目</td>
+                                                <td>答案</td>
+                                                <td>分值</td>
+                                                <td>保存</td>
+                                            </tr>
+                                            <tr>
+                                                <form th:action="@{../point/insertfillin}" th:method="post">
+                                                    <input class = "taskidinputer" type="hidden" name="taskid"/>
+                                                    <td><input type="text" class="form-control" name = "qname"/></td>
+                                                    <td><input type="text" class="form-control" name = "answer"/></td>
+                                                    <td><input type="text" class="form-control" name = "score"/></td>
+                                                    <td><button type = "submit" class = "btn btn-primary">保存</button></td>
+                                                </form>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="TFcontainer">
+                                    <table id = "tftable" class="table table-condensed table-hover table-striped" >
+                                        <tr>
+                                            <td>题目id</td>
+                                            <td>题目</td>
+                                            <td>答案</td>
+                                            <td>分值</td>
+                                        </tr>
+                                    </table>
+                                    <button class = "btn btn-primary"  data-toggle="collapse" data-target="#tfinsert">添加题目</button>
+                                    <div id="tfinsert" class="collapse">
+                                        <table id = "tfinserttable" class="table table-condensed table-hover table-striped" >
+                                            <tr>
+                                                <td>题目</td>
+                                                <td>答案</td>
+                                                <td>分值</td>
+                                                <td>保存</td>
+                                            </tr>
+                                            <tr>
+                                                <form th:action="@{../point/inserttf}" th:method="post">
+                                                    <input class = "taskidinputer" type="hidden" name="taskid"/>
+                                                    <td><input type="text" class="form-control" name = "qname"/></td>
+                                                    <td><input type="text" class="form-control" name = "answer"/></td>
+                                                    <td><input type="text" class="form-control" name = "score"/></td>
+                                                    <td><button type = "submit" class = "btn btn-primary">保存</button></td>
+                                                </form>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger">删除知识点</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="crspointInsertModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="crspointInsertLabel">添加知识点</h4>
+                </div>
+                <div class="modal-body">
+                    <form th:action="@{../point/insert}" th:method="post" id = "crspointinsertForm" enctype="multipart/form-data">
+                        <input type="hidden" name="chapterid" id = "crspointinsertchapterid"/>
+                        <div class="input-group">
+                            <span class="input-group-addon">知识点名</span>
+                            <input type="text" class="form-control" name="crspointname"/>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">添加</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="chapterInsertModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="chapterInsertLabel">添加章节</h4>
+                </div>
+                <div class="modal-body">
+                    <form th:action="@{../chapter/insert}" th:method="post" id = "chapterinsertForm">
+                        <input type="hidden" name="courseid" th:value = "${courseid}" />
+                        <div class="input-group">
+                            <span class="input-group-addon">章节名</span>
+                            <input type="text" class="form-control" name="chaptername"/>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">添加</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

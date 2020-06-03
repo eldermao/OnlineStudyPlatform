@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<link href="../css/home.css" rel="stylesheet" type="text/css">
+<link href="../css/examPage.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.staticfile.org/jquery/3.4.0/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script>
+        $(document).ready(function(){
+            var timestat = 0;
+            var min = 59, sec = 59;
+            setInterval(function(){
+                sec--;
+                if(parseInt(min) == 0 && parseInt(sec) == 0) {
+                    $("#submitanswer").click();
+                }
+                if(sec == 0) {
+                    min--;
+                    sec = 59;
+                }
+                if(min<=20&&timestat==1){
+                    $("#clock").removeClass("alert-warning");
+                    $("#clock").addClass("alert-danger");
+                    timestat = 2;
+                }else if(min<=40&&timestat==0){
+                    $("#clock").removeClass("alert-success");
+                    $("#clock").addClass("alert-warning");
+                    timestat = 1;
+                }
+                $("#clock").text("剩余考试时间还有" + min + "分" + sec + "秒");
+
+            }, 1000);
+
+            let quitflag = true;
+            window.onbeforeunload = function(){
+                if(quitflag){
+                    $("#submitanswer").click();
+                }
+            }
+
+            $(".choice").mouseenter(function(){
+                $(this).css({"background": "lightgrey"});
+            })
+            $(".choice").mouseleave(function () {
+                $(this).css({"background": "white"});
+            })
+            $(".choice").click(function(){
+
+                if($(this).parent().hasClass("active")){
+                    if($(this).hasClass("active")){
+                        $(this).css({"background": "white"});
+                        $(this).bind("mouseenter", function(){
+                            $(this).css({"background": "lightgrey"});
+                        }).bind('mouseleave', function(){
+                            $(this).css({"background": "white"});
+                        });
+                        $(this).removeClass("active");
+                        $(this).parent().removeClass("active");
+                    }else{
+                        var list = $(this).parent().children(".choice");
+                        list.removeClass("active");
+                        list.bind("mouseenter", function(){
+                            $(this).css({"background": "lightgrey"});
+                        }).bind('mouseleave', function(){
+                            $(this).css({"background": "white"});
+                        });
+                        list.css({"background": "white"});
+                        $(this).css({"background": "lightgrey"});
+                        $(this).unbind('mouseenter').unbind('mouseleave');
+                        $(this).addClass("active")
+                    }
+                }else{
+                    var list = $(this).parent().children(".choice");
+                    list.removeClass("active");
+                    list.bind("mouseenter", function(){
+                        $(this).css({"background": "lightgrey"});
+                    }).bind('mouseleave', function(){
+                        $(this).css({"background": "white"});
+                    });
+                    list.css({"background": "white"});
+                    $(this).css({"background": "lightgrey"});
+                    $(this).unbind('mouseenter').unbind('mouseleave');
+                    $(this).addClass("active");
+                    $(this).parent().addClass("active");
+                }
+
+            })
+            $("#submitanswer").click(function () {
+                var score = 0;
+                $(".choicequestion").each(function () {
+                    //选择题
+                    var answer = $(this).find(".answer").text();
+                    var choicescore = $(this).find(".choicescore").text()*1;
+                    if($(this).children().hasClass("active")){
+                        $($(this).find(".choice")).each(function () {
+                            if($(this).hasClass("active")){
+                                if($(this).attr("id")==answer){
+                                    $(this).css({"background": "lightgreen"});
+                                    score+=choicescore;
+                                }else{
+                                    $(this).css({"background": "red"});
+                                }
+                            }else{
+                                if($(this).attr("id")==answer){
+                                    $(this).css({"background": "lightgreen"});
+                                }
+                            }
+                            $(this).unbind('mouseenter').unbind('mouseleave');
+                        })
+                    }else{
+                        $($(this).find(".choice")).each(function () {
+                            if($(this).attr("id")==answer){
+                                $(this).css({"background": "orange"});
+                            }
+                            $(this).unbind('mouseenter').unbind('mouseleave');
+                        })
+                    }
+                })
+
+                $(".tfquestion").each(function () {
+                    //判断题
+                    var answer = $(this).find(".tfanswer").text();
+                    var tfscore = $(this).find(".tfscore").text()*1;
+                    if($(this).children().hasClass("active")){
+                        $($(this).find(".choice")).each(function () {
+                            if($(this).hasClass("active")){
+                                if($(this).attr("id")==answer){
+                                    $(this).css({"background": "lightgreen"});
+                                    score+=tfscore;
+                                }else{
+                                    $(this).css({"background": "red"});
+                                }
+                            }else{
+                                if($(this).attr("id")==answer){
+                                    $(this).css({"background": "lightgreen"});
+                                }
+                            }
+                            $(this).unbind('mouseenter').unbind('mouseleave');
+                        })
+                    }else{
+                        $($(this).find(".choice")).each(function () {
+                            if($(this).attr("id")==answer){
+                                $(this).css({"background": "orange"});
+                            }
+                            $(this).unbind('mouseenter').unbind('mouseleave');
+                        })
+                    }
+                })
+
+                $(".fillinquestion").each(function () {
+                    //填空题
+                    var fillinscore = $(this).find(".fillinscore").text()*1;
+                    if($($(this).find(".fillininputer")).val().trim()===$($(this).find(".fillinanswer")).text().trim()){
+                        score+=fillinscore;
+                    }
+                    $($(this).find(".fillinanswer")).show("fast");
+
+                })
+                $.post("../score/examinsert", {
+                    "userid": [[${theUser.userid}]],
+                    "groupid": [[${groupid}]],
+                    "examid":[[${examid}]],
+                    "score":score
+                },function (res) {
+                    alert(res);
+                    $(".subjectivequestion").each(function () {
+                        $.post("../score/studentanswerinsert", {
+                            "qid": $(this).find(".qid").val(),
+                            "studentid": [[${theUser.userid}]],
+                            "answer": $(this).find(".subjectiveinputer").val(),
+                        })
+
+                    })
+                    quitflag = false;
+                    $(location).attr('href', '../exam');
+                })
+
+            })
+        });
+    </script>
+</head>
+<body>
+<div class="mainpage">
+    <div id="examcontainer">
+        <div id = "clock" class="alert alert-success">剩余考试时间还有60分0秒</div>
+        <h3 class="page-header">选择题</h3>
+        <h5 style="color:#aaa; margin-top:10px">Choice Question</h5>
+        <div class="panel panel-default choicequestion" th:each="quest:${choicequestionlist}">
+            <div class="panel-heading">
+                <span class="panel-title" th:text = "${questStat.count}"></span>.
+                <span class="panel-title" th:text = "${quest.getQname()}"></span>
+            </div>
+            <div class="panel-body" >
+                <button id = "A" type="button" class="btn btn-default btn-sm btn-block choice">
+                    <span>A.</span>
+                    <span th:text = "${quest.getC1()}" class = "choiceA"></span>
+                </button>
+                <button id = "B" type="button" class="btn btn-default btn-sm btn-block choice">
+                    <span>B.</span>
+                    <span th:text = "${quest.getC2()}"></span>
+                </button>
+                <button id = "C" type="button" class="btn btn-default btn-sm btn-block choice">
+                    <span>C.</span>
+                    <span th:text = "${quest.getC3()}"></span>
+                </button>
+                <button id = "D" type="button" class="btn btn-default btn-sm btn-block choice">
+                    <span>D.</span>
+                    <span th:text = "${quest.getC4()}"></span>
+                </button>
+                <div class = "answer" th:text = "${quest.getAnswer()}" style="display: none"></div>
+                <div class = "choicescore" th:text = "${quest.getScore()}" style="display: none"></div>
+            </div>
+        </div>
+        <h3 class="page-header">判断题</h3>
+        <h5 style="color:#aaa; margin-top:10px">True-False Question</h5>
+        <div class="panel panel-default tfquestion" th:each="quest:${tfquestionlist}">
+            <div class="panel-heading">
+                <span class="panel-title" th:text = "${questStat.count}"></span>.
+                <span class="panel-title" th:text = "${quest.getQname()}"></span>
+            </div>
+            <div class="panel-body" >
+                <button id = "T" type="button" class="btn btn-default btn-sm btn-block choice">
+                    <span>正确</span>
+                </button>
+                <button id = "F" type="button" class="btn btn-default btn-sm btn-block choice">
+                    <span>错误</span>
+                </button>
+                <div class = "tfanswer" th:text = "${quest.getAnswer()}" style="display: none"></div>
+                <div class = "tfscore" th:text = "${quest.getScore()}" style="display: none"></div>
+            </div>
+        </div>
+        <h3 class="page-header">填空题</h3>
+        <h5 style="color:#aaa; margin-top:10px">Fillin Question</h5>
+        <div class="panel panel-default fillinquestion" th:each="quest:${fillinquestionlist}">
+            <div class="panel-heading">
+                <span class="panel-title" th:text = "${questStat.count}"></span>.
+                <span class="panel-title" th:text = "${quest.getQname()}"></span>
+            </div>
+            <div class="panel-body">
+                <input type="text" class="form-control fillininputer" style="width: 50%">
+                <span class = "fillinanswer" th:text = "${quest.getAnswer()}" style="display: none"></span>
+                <span class = "fillinscore" th:text = "${quest.getScore()}" style="display: none"></span>
+            </div>
+        </div>
+        <h3 class="page-header">主观题</h3>
+        <h5 style="color:#aaa; margin-top:10px">Subjective Question</h5>
+        <div class="panel panel-default subjectivequestion" th:each="quest:${subjectivequestionlist}">
+            <div class="panel-heading">
+                <span class="panel-title" th:text = "${questStat.count}"></span>.
+                <span class="panel-title" th:text = "${quest.getQname()}"></span>
+            </div>
+            <div class="panel-body">
+                <input class="qid" th:value="${quest.getQid()}" style="display: none"/>
+                <textarea type="textarea" class="form-control subjectiveinputer" rows="5" style = "resize: none;"></textarea>
+            </div>
+        </div>
+        <input type="button" id="submitanswer"  class="btn btn-primary"  value = "提交"/>
+    </div>
+
+</div>
+</body>
+</html>

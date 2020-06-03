@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<link href="../css/home.css" rel="stylesheet" type="text/css">
+<link href="../css/userpage.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.staticfile.org/jquery/3.4.0/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script th:inline = "javascript">
+        $(document).ready(function(){
+            /*console.log([[${isExist}]]);
+            console.log([[${theUser}]]);*/
+            if([[${isExist}]]==true){
+                $("#userhead").text([[${theUser.username}]]);
+                $("#userdrag").append("<li><a href=\"/user\">用户中心</a></li>");
+                $("#userdrag").append("<li><a id = \"logout\">登出</a></li>");
+                $("#userprofile").attr("src", "../img/profile/user_" + [[${theUser.getProfile()}]]);
+                $("#userimg").attr("src", "../img/profile/user_" + [[${theUser.getProfile()}]]);
+                $("#logout").click(function () {
+                    $.removeCookie('userid',{ path: '/'});
+                    $.removeCookie('userpassword',{ path: '/'});
+                    $(location).attr('href', '../');
+                });
+            }else{
+                $("#userhead").text("用户");
+                $("#userdrag").append("<li><a href=\"/user/loginuser\">登录</a></li>");
+                $("#userdrag").append("<li><a href=\"/user/insertuser\">注册</a></li>");
+            }
+        });
+    </script>
+</head>
+<body>
+<div class="top">
+    <ul>
+        <li><a href="../">首页</a></li>
+        <li><a>课程中心</a>
+            <ul>
+                <li><a href="../course">选课中心</a></li>
+                <li><a href="../chapter">已选课程</a></li>
+                <li><a href="../course/manage">课程管理</a></li>
+            </ul>
+        </li>
+        <li><a>考试中心</a>
+            <ul>
+                <li><a href="../exam">我的考试</a></li>
+                <li><a href="../exam/manage">考试管理</a></li>
+            </ul>
+        </li>
+        <li><a>学习记录</a>
+            <ul>
+                <li><a href="../progress">学习进度</a></li>
+                <li><a href="../score">成绩查询</a></li>
+            </ul>
+        </li>
+        <li style="background-color: grey;float: right">
+            <a id = "userhead" ></a>
+            <ul style="right:0" id = "userdrag" >
+            </ul>
+        </li>
+        <li style="float: right">
+            <img id = "userprofile" src = "../img/profile/user_0.png" class="img-circle" style="width: 40px; height: 40px; margin-top: 5px; margin-left: 50px"/>
+        </li>
+    </ul>
+</div>
+<div class="mainpage">
+    <div class="panel panel-success" style="width: 70%; margin: 0 auto; margin-top: 50px;">
+        <div class="panel-heading">
+            <h3 class="panel-title" th:text="${notify.title}"></h3>
+        </div>
+        <div class="panel-body">
+            <img th:src="@{../img/notify/{filename}(filename=${notify.getPic()})}" class="img-rounded" style="width: auto; height: 200px;"/>
+            <p class="lead" th:text="${notify.content}"></p>
+            <p class="text-right">发布人：</p>
+            <p class="text-right" th:text="${notify.username}"></p>
+        </div>
+    </div>
+    <button type="button" class="btn btn-default" style="margin-top: 10px" ><a href = "../notify">返回公告列表</a></button>
+</div>
+</body>
+</html>

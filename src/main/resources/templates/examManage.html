@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<link href="../css/examManage.css" rel="stylesheet" type="text/css">
+<link href="../css/home.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.staticfile.org/jquery/3.4.0/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="../js/jquery.form.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script th:inline = "javascript">
+        $(document).ready(function(){
+            /*console.log([[${isExist}]]);
+            console.log([[${theUser}]]);*/
+            if([[${isExist}]]==true){
+                $("#userhead").text([[${theUser.username}]]);
+                $("#userdrag").append("<li><a href=\"/user\">用户中心</a></li>");
+                $("#userdrag").append("<li><a id = \"logout\">登出</a></li>");
+                $("#userprofile").attr("src", "../img/profile/user_" + [[${theUser.getProfile()}]]);
+                $("#logout").click(function () {
+                    $.removeCookie('userid',{ path: '/'});
+                    $.removeCookie('userpassword',{ path: '/'});
+                    $(location).attr('href', '../');
+                });
+            }else{
+                $("#userhead").text("用户");
+                $("#userdrag").append("<li><a href=\"/user/loginuser\">登录</a></li>");
+                $("#userdrag").append("<li><a href=\"/user/insertuser\">注册</a></li>");
+            }
+        });
+    </script>
+
+    <script>
+        $(document).ready(function(){
+            $(".examdltFrom").ajaxForm(function (data) {
+                alert(data);
+                location.reload();
+            });
+            $("#contestinsertForm").ajaxForm(function (data) {
+                alert(data);
+                location.reload();
+            });
+            $("#examinsertForm").ajaxForm(function (data) {
+                alert(data);
+                location.reload();
+            });
+
+            $(".exammanagebtn").click(function () {
+                $(".examidinputer").val($(this).val());
+                $("#subinsertbtn").removeAttr("disabled");//主观题添加可选
+                $("#infostart").removeAttr("readonly");//开始时间可填
+                $("#infoend").removeAttr("readonly");//结束时间可填
+
+                $("#infoid").val($(this).parent().parent().find(".infoid").text());
+                $("#infoname").val($(this).parent().parent().find(".infoname").text());
+                $("#infostart").val($(this).parent().parent().find(".infostart").text());
+                $("#infoend").val($(this).parent().parent().find(".infoend").text());
+
+                $(".choicelistcontainer").remove();
+                $(".fillinlistcontainer").remove();
+                $(".tflistcontainer").remove();
+                $(".sublistcontainer").remove();
+                $(".sqlistcontainer").remove();
+                $.post("../exam/choicequestion", {
+                    "examid": $(this).val()
+                },function (res) {
+                    $.each(res, function (i,val) {
+                        $("#choicetable").append("<tr class = \"choicelistcontainer\">\n" +
+                            "                            <input type=\"hidden\" class=\"choiceqid\" value = \"" + val.qid + "\"/>" +
+                            "                            <td>" + val.qid + "</td>\n" +
+                            "                            <td width='300px'><input type=\"text\" class=\"form-control choiceqname\" value = \"" + val.qname + "\"></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control choicec1\" value = \"" + val.c1 + "\"></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control choicec2\" value = \"" + val.c2 + "\"></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control choicec3\" value = \"" + val.c3 + "\"></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control choicec4\" value = \"" + val.c4 + "\"></td>\n" +
+                            "                            <td width='80px'><select class=\"form-control choiceanswer\">\n" +
+                            "                               <option selected:disabled style=\"display:none\" value = \"" + val.answer + "\">" + val.answer + "</option>\n" +
+                            "                               <option>A</option>\n" +
+                            "                               <option>B</option>\n" +
+                            "                               <option>C</option>\n" +
+                            "                               <option>D</option>\n" +
+                            "                            </select></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control choicescore\" value = \"" + val.score + "\"></td>\n" +
+                            "                            <td><button class = \"btn btn-primary editchoicebtn\">编辑</button></td>\n" +
+                            "                            <td><button class = \"btn btn-danger dltchoicebtn\">删除</button></td>\n" +
+                            "                        </tr>");
+                    })
+                })
+
+                $.post("../exam/fillinquestion", {
+                    "examid": $(this).val()
+                },function (res) {
+                    $.each(res, function (i,val) {
+                        $("#fillintable").append("<tr class = \"fillinlistcontainer\">\n" +
+                            "                            <input type=\"hidden\" class=\"fillinqid\" value = \"" + val.qid + "\"/>" +
+                            "                            <td>" + val.qid + "</td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control fillinqname\" value = \"" + val.qname + "\"></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control fillinanswer\" value = \"" + val.answer + "\"></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control fillinscore\" value = \"" + val.score + "\"></td>\n" +
+                            "                            <td><button class = \"btn btn-primary editfillinbtn\">编辑</button></td>\n" +
+                            "                            <td><button class = \"btn btn-danger dltfillinbtn\">删除</button></td>\n" +
+                            "                     </tr>");
+                    })
+                })
+
+                $.post("../exam/tfquestion", {
+                    "examid": $(this).val()
+                },function (res) {
+                    $.each(res, function (i,val) {
+                        $("#tftable").append("<tr class = \"tflistcontainer\">\n" +
+                            "                      <input type=\"hidden\" class=\"tfqid\" value = \"" + val.qid + "\"/>" +
+                            "                      <td>" + val.qid + "</td>\n" +
+                            "                      <td><input type=\"text\" class=\"form-control tfqname\" value = \"" + val.qname + "\"/></td>\n" +
+                            "                            <td width='80px'><select class=\"form-control tfanswer\">\n" +
+                            "                               <option selected:disabled style=\"display:none\" value = \"" + val.answer + "\">" + val.answer + "</option>\n" +
+                            "                               <option>T</option>\n" +
+                            "                               <option>F</option>\n" +
+                            "                            </select></td>\n" +
+                            "                      <td><input type=\"text\" class=\"form-control tfscore\" value = \"" + val.score + "\"/></td>\n" +
+                            "                      <td><button class = \"btn btn-primary edittfbtn\">编辑</button></td>\n" +
+                            "                      <td><button class = \"btn btn-danger dlttfbtn\">删除</button></td>\n" +
+                            "                  </tr>");
+                    })
+                })
+
+                $.post("../exam/subquestion", {
+                    "examid": $(this).val()
+                },function (res) {
+                    $.each(res, function (i,val) {
+                        $("#subtable").append("<tr class = \"sublistcontainer\">\n" +
+                            "                      <input type=\"hidden\" class=\"tfqid\" value = \"" + val.qid + "\"/>" +
+                            "                      <td>" + val.qid + "</td>\n" +
+                            "                      <td><input type=\"text\" class=\"form-control tfqname\" value = \"" + val.qname + "\"/></td>\n" +
+                            "                      <td><input type=\"text\" class=\"form-control tfscore\" value = \"" + val.score + "\"/></td>\n" +
+                            "                      <td><button class = \"btn btn-primary editsubbtn\">编辑</button></td>\n" +
+                            "                      <td><button class = \"btn btn-danger dltsubbtn\">删除</button></td>\n" +
+                            "                  </tr>");
+                    })
+                })
+
+                $.post("../exam/sqstudentanswer", {
+                    "examid": $(this).val()
+                },function (res) {
+                    $.each(res, function (i,val) {
+                        let t;
+                        if(val.iscorrected == 0){
+                            t = "<tr class = \"sqlistcontainer\">\n" +
+                                "                      <input type=\"hidden\" class=\"sqqid\" value = \"" + val.qid + "\"/>" +
+                                "                      <input type=\"hidden\" class=\"sqstudentid\" value = \"" + val.studentid + "\"/>" +
+                                "                      <td  width = \"60px\">" + val.qid + "</td>\n" +
+                                "                      <td>" + val.qname + "</td>\n" +
+                                "                      <td width = \"400px\">" + val.answer + "</td>\n" +
+                                "                      <td width = \"60px\"><input type=\"text\" class=\"form-control sqscore\" value = \"" + val.score + "\"/></td>\n" +
+                                "                      <td width = \"60px\">" + val.maxscore + "</td>\n" +
+                                "                      <td><button class = \"btn btn-primary editscorebtn\">给分</button></td>\n" +
+                                "                      <td width = \"60px\"><p class=\"text-danger\">未阅</p></td>\n" +
+                                "                  </tr>";
+                        }else{
+                            t = "<tr class = \"sqlistcontainer\">\n" +
+                                "                      <input type=\"hidden\" class=\"sqqid\" value = \"" + val.qid + "\"/>" +
+                                "                      <td>" + val.qid + "</td>\n" +
+                                "                      <td>" + val.qname + "</td>\n" +
+                                "                      <td>" + val.answer + "</td>\n" +
+                                "                      <td>" + val.score + "</td>\n" +
+                                "                      <td>" + val.maxscore + "</td>\n" +
+                                "                      <td><p class=\"text-success\">已阅</p></td>\n" +
+                                "                  </tr>";
+                        }
+                        $("#sqtable").append(t);
+                    })
+                })
+            })
+
+            $(".contestmanagebtn").click(function () {
+                $(".examidinputer").val($(this).val());
+
+
+                $("#infoid").val($(this).parent().parent().find(".infoid").text());
+                $("#infoname").val($(this).parent().parent().find(".infoname").text());
+                $("#infostart").val(0);
+                $("#infoend").val(0);
+                $("#infostart").attr("readonly", "readonly");
+                $("#infoend").attr("readonly", "readonly");
+
+                $(".choicelistcontainer").remove();
+                $(".fillinlistcontainer").remove();
+                $(".tflistcontainer").remove();
+                $(".sublistcontainer").remove();
+                $(".sqlistcontainer").remove();
+                $.post("../exam/choicequestion", {
+                    "examid": $(this).val()
+                },function (res) {
+                    $.each(res, function (i,val) {
+                        $("#choicetable").append("<tr class = \"choicelistcontainer\">\n" +
+                            "                            <input type=\"hidden\" class=\"choiceqid\" value = \"" + val.qid + "\"/>" +
+                            "                            <td>" + val.qid + "</td>\n" +
+                            "                            <td width='300px'><input type=\"text\" class=\"form-control choiceqname\" value = \"" + val.qname + "\"></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control choicec1\" value = \"" + val.c1 + "\"></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control choicec2\" value = \"" + val.c2 + "\"></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control choicec3\" value = \"" + val.c3 + "\"></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control choicec4\" value = \"" + val.c4 + "\"></td>\n" +
+                            "                            <td width='80px'><select class=\"form-control choiceanswer\">\n" +
+                            "                               <option selected:disabled style=\"display:none\" value = \"" + val.answer + "\">" + val.answer + "</option>\n" +
+                            "                               <option>A</option>\n" +
+                            "                               <option>B</option>\n" +
+                            "                               <option>C</option>\n" +
+                            "                               <option>D</option>\n" +
+                            "                            </select></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control choicescore\" value = \"" + val.score + "\"></td>\n" +
+                            "                            <td><button class = \"btn btn-primary editchoicebtn\">编辑</button></td>\n" +
+                            "                            <td><button class = \"btn btn-danger dltchoicebtn\">删除</button></td>\n" +
+                            "                        </tr>");
+                    })
+                })
+
+                $.post("../exam/fillinquestion", {
+                    "examid": $(this).val()
+                },function (res) {
+                    $.each(res, function (i,val) {
+                        $("#fillintable").append("<tr class = \"fillinlistcontainer\">\n" +
+                            "                            <input type=\"hidden\" class=\"fillinqid\" value = \"" + val.qid + "\"/>" +
+                            "                            <td>" + val.qid + "</td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control fillinqname\" value = \"" + val.qname + "\"></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control fillinanswer\" value = \"" + val.answer + "\"></td>\n" +
+                            "                            <td><input type=\"text\" class=\"form-control fillinscore\" value = \"" + val.score + "\"></td>\n" +
+                            "                            <td><button class = \"btn btn-primary editfillinbtn\">编辑</button></td>\n" +
+                            "                            <td><button class = \"btn btn-danger dltfillinbtn\">删除</button></td>\n" +
+                            "                     </tr>");
+                    })
+                })
+
+                $.post("../exam/tfquestion", {
+                    "examid": $(this).val()
+                },function (res) {
+                    $.each(res, function (i,val) {
+                        $("#tftable").append("<tr class = \"tflistcontainer\">\n" +
+                            "                      <input type=\"hidden\" class=\"tfqid\" value = \"" + val.qid + "\"/>" +
+                            "                      <td>" + val.qid + "</td>\n" +
+                            "                      <td><input type=\"text\" class=\"form-control tfqname\" value = \"" + val.qname + "\"/></td>\n" +
+                            "                            <td width='80px'><select class=\"form-control tfanswer\">\n" +
+                            "                               <option selected:disabled style=\"display:none\" value = \"" + val.answer + "\">" + val.answer + "</option>\n" +
+                            "                               <option>T</option>\n" +
+                            "                               <option>F</option>\n" +
+                            "                            </select></td>\n" +
+                            "                      <td><input type=\"text\" class=\"form-control tfscore\" value = \"" + val.score + "\"/></td>\n" +
+                            "                      <td><button class = \"btn btn-primary edittfbtn\">编辑</button></td>\n" +
+                            "                      <td><button class = \"btn btn-danger dlttfbtn\">删除</button></td>\n" +
+                            "                  </tr>");
+                    })
+                })
+
+                $("#subinsertbtn").attr("disabled","disabled");
+                $("#subinsert").removeClass("in");
+
+                $("#subcontainer").append("<h4 class = \"sublistcontainer\">比赛不设主观题</h4>");
+                $("#correctcontainer").append("<h4 class = \"sqlistcontainer\">比赛不设主观题</h4>");
+            })
+
+            $("#choicetable").on("click", ".editchoicebtn", function () {
+                $.post("../point/editchoice", {
+                    "qid": $(this).parent().parent().find(".choiceqid").val(),
+                    "qname": $(this).parent().parent().find(".choiceqname").val(),
+                    "c1": $(this).parent().parent().find(".choicec1").val(),
+                    "c2": $(this).parent().parent().find(".choicec2").val(),
+                    "c3": $(this).parent().parent().find(".choicec3").val(),
+                    "c4": $(this).parent().parent().find(".choicec4").val(),
+                    "answer": $(this).parent().parent().find(".choiceanswer").val(),
+                    "score": $(this).parent().parent().find(".choicescore").val()
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+
+            $("#choicetable").on("click", ".dltchoicebtn", function () {
+                $.post("../point/dltchoice", {
+                    "qid": $(this).parent().parent().find(".choiceqid").val(),
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+
+            $("#fillintable").on("click", ".editfillinbtn", function () {
+                $.post("../point/editfillin", {
+                    "qid": $(this).parent().parent().find(".fillinqid").val(),
+                    "qname": $(this).parent().parent().find(".fillinqname").val(),
+                    "answer": $(this).parent().parent().find(".fillinanswer").val(),
+                    "score": $(this).parent().parent().find(".fillinscore").val()
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+
+            $("#fillintable").on("click", ".dltfillinbtn", function () {
+                $.post("../point/dltfillin", {
+                    "qid": $(this).parent().parent().find(".fillinqid").val(),
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+
+            $("#tftable").on("click", ".edittfbtn", function () {
+                $.post("../point/edittf", {
+                    "qid": $(this).parent().parent().find(".tfqid").val(),
+                    "qname": $(this).parent().parent().find(".tfqname").val(),
+                    "answer": $(this).parent().parent().find(".tfanswer").val(),
+                    "score": $(this).parent().parent().find(".tfscore").val()
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+
+            $("#tftable").on("click", ".dlttfbtn", function () {
+                $.post("../point/dlttf", {
+                    "qid": $(this).parent().parent().find(".tfqid").val(),
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+
+            $("#subtable").on("click", ".editsubbtn", function () {
+                $.post("../exam/editsub", {
+                    "qid": $(this).parent().parent().find(".tfqid").val(),
+                    "qname": $(this).parent().parent().find(".tfqname").val(),
+                    "score": $(this).parent().parent().find(".tfscore").val()
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+
+            $("#subtable").on("click", ".dltsubbtn", function () {
+                $.post("../exam/dltsub", {
+                    "qid": $(this).parent().parent().find(".tfqid").val(),
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+
+            $("#sqtable").on("click", ".editscorebtn", function () {
+                $.post("../score/studentanswercorrect", {
+                    "qid": $(this).parent().parent().find(".sqqid").val(),
+                    "studentid": $(this).parent().parent().find(".sqstudentid").val(),
+                    "score": $(this).parent().parent().find(".sqscore").val(),
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+        });
+    </script>
+</head>
+<body>
+<div class="top">
+    <ul>
+        <li><a href="../">首页</a></li>
+        <li><a>课程中心</a>
+            <ul>
+                <li><a href="../course">选课中心</a></li>
+                <li><a href="../chapter">已选课程</a></li>
+                <li><a href="../course/manage">课程管理</a></li>
+            </ul>
+        </li>
+        <li><a style="background-color: grey;">考试中心</a>
+            <ul>
+                <li><a href="../exam">我的考试</a></li>
+                <li><a href="../exam/manage">考试管理</a></li>
+            </ul>
+        </li>
+        <li><a>学习记录</a>
+            <ul>
+                <li><a href="../progress">学习进度</a></li>
+                <li><a href="../score">成绩查询</a></li>
+            </ul>
+        </li>
+        <li style="float: right">
+            <a id = "userhead"></a>
+            <ul style="right:0" id = "userdrag" >
+            </ul>
+        </li>
+        <li style="float: right">
+            <img id = "userprofile" src = "../img/profile/user_0.png" class="img-circle" style="width: 40px; height: 40px; margin-top: 5px; margin-left: 50px"/>
+        </li>
+    </ul>
+</div>
+<div class="mainpage">
+    <h3 class="page-header">课程考试</h3>
+    <h5 style="color:#aaa; margin-top:10px">Course Exam</h5>
+    <table id = "scoretable" class="table table-condensed table-hover table-striped" >
+        <tr>
+            <td>考试序号</td>
+            <td>考试名</td>
+            <td>开始时间</td>
+            <td>结束时间</td>
+        </tr>
+        <tr class = "courselist" th:each="exam:${examList}">
+            <td th:text="${exam.getExamid()}" class = "infoid"></td>
+            <td th:text="${exam.getExamname()}" class = "infoname"></td>
+            <td th:text="${exam.getStarttime()}" class = "infostart"></td>
+            <td th:text="${exam.getEndtime()}" class = "infoend"></td>
+            <td>
+                <button type="button" class="btn btn-primary exammanagebtn"  data-toggle="modal" data-target="#examManageModal" th:value="${exam.getExamid()}">管理</button>
+            </td>
+            <td>
+                <form class = "examdltFrom" th:action="@{/exam/dltexam}" th:method="post">
+                    <input type="hidden" name="examid" th:value="${exam.getExamid()}"/>
+                    <button type="submit" class="btn btn-danger">删除</button>
+                </form>
+            </td>
+        </tr>
+    </table>
+    <button type="submit" class="btn btn-primary" data-toggle="modal" data-target="#examinsertModal">添加考试</button>
+    <h3 class="page-header">课程比赛</h3>
+    <h5 style="color:#aaa; margin-top:10px">Course Contest</h5>
+    <table id = "contesttable" class="table table-condensed table-hover table-striped" >
+        <tr>
+            <td>比赛序号</td>
+            <td>比赛名</td>
+        </tr>
+        <tr class = "courselist" th:each="exam:${coursecontestList}">
+            <td th:text="${exam.getExamid()}" class = "infoid"></td>
+            <td th:text="${exam.getExamname()}" class = "infoname"></td>
+            <td>
+                <button type="button" class="btn btn-primary contestmanagebtn"  data-toggle="modal" data-target="#examManageModal" th:value="${exam.getExamid()}">管理</button>
+            </td>
+            <td>
+                <form class = "examdltFrom" th:action="@{/exam/dltexam}" th:method="post">
+                    <input type="hidden" name="examid" th:value="${exam.getExamid()}"/>
+                    <button type="submit" class="btn btn-danger">删除</button>
+                </form>
+            </td>
+        </tr>
+    </table>
+    <button type="submit" class="btn btn-primary"  data-toggle="modal" data-target="#contestinsertModal">添加比赛</button>
+
+
+
+    <div class="modal fade" id="examManageModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="width:1100px">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="crspointManageModalLabel">考试管理</h4>
+                </div>
+                <div class="modal-body">
+                    <ul id="myTab" class="nav nav-tabs nav-justified">
+                        <li class="active">
+                            <a href="#infocontainer" data-toggle="tab">
+                                信息
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#taskcontainer" data-toggle="tab">
+                                题目
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#correctcontainer" data-toggle="tab">
+                                主观题阅卷
+                            </a>
+                        </li>
+                    </ul>
+                    <div id="myTabContent" class="tab-content">
+                        <div class="tab-pane fade in active" id="infocontainer">
+                            <div style="width: 50%; margin: 0 auto;">
+                                <form th:action="@{../exam/edit}" th:method="post">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">考试id</span>
+                                        <input type="text" class="form-control" id = "infoid" name="examid" readonly="readonly">
+                                    </div>
+                                    <div class="input-group">
+                                        <span class="input-group-addon">考试名</span>
+                                        <input type="text" class="form-control" id = "infoname" name = "examname">
+                                    </div>
+                                    <div class="input-group">
+                                        <span class="input-group-addon">开始时间</span>
+                                        <input type="text" class="form-control" id = "infostart" name = "starttime">
+                                    </div>
+                                    <div class="input-group">
+                                        <span class="input-group-addon">结束时间</span>
+                                        <input type="text" class="form-control" id = "infoend" name = "endtime">
+                                    </div>
+                                    <button type = "submit" class = "btn btn-primary">保存</button>
+                                </form>
+                            </div>
+
+                        </div>
+                        <div class="tab-pane fade" id="taskcontainer">
+                            <ul id="taskTab" class="nav nav-tabs nav-justified">
+                                <li>
+                                    <a href="#choicecontainer" data-toggle="tab">
+                                        单选题
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#fillincontainer" data-toggle="tab">
+                                        填空题
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#TFcontainer" data-toggle="tab">
+                                        判断题
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#subcontainer" data-toggle="tab">
+                                        主观题
+                                    </a>
+                                </li>
+                            </ul>
+                            <div id="TabContent" class="tab-content">
+                                <div class="tab-pane fade in active" id="choicecontainer">
+                                    <table id = "choicetable" class="table table-condensed table-hover table-striped" >
+                                        <tr>
+                                            <td>题目id</td>
+                                            <td>题目</td>
+                                            <td>A</td>
+                                            <td>B</td>
+                                            <td>C</td>
+                                            <td>D</td>
+                                            <td>答案</td>
+                                            <td>分值</td>
+                                        </tr>
+                                    </table>
+                                    <button class = "btn btn-primary"  data-toggle="collapse" data-target="#choiceinsert">添加题目</button>
+                                    <div id="choiceinsert" class="collapse">
+                                        <table id = "choiceinserttable" class="table table-condensed table-hover table-striped" >
+                                            <tr>
+                                                <td>题目</td>
+                                                <td>A</td>
+                                                <td>B</td>
+                                                <td>C</td>
+                                                <td>D</td>
+                                                <td>答案</td>
+                                                <td>分值</td>
+                                                <td>保存</td>
+                                            </tr>
+                                            <tr>
+                                                <form th:action="@{../exam/insertchoice}" th:method="post">
+                                                    <input class = "examidinputer" type="hidden" name="examid"/>
+                                                    <td><input type="text" class="form-control" name = "qname"/></td>
+                                                    <td><input type="text" class="form-control" name = "c1"/></td>
+                                                    <td><input type="text" class="form-control" name = "c2"/></td>
+                                                    <td><input type="text" class="form-control" name = "c3"/></td>
+                                                    <td><input type="text" class="form-control" name = "c4"/></td>
+                                                    <td><input type="text" class="form-control" name = "answer"/></td>
+                                                    <td><input type="text" class="form-control" name = "score"/></td>
+                                                    <td><button type = "submit" class = "btn btn-primary">保存</button></td>
+                                                </form>
+
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="fillincontainer">
+                                    <table id = "fillintable" class="table table-condensed table-hover table-striped" >
+                                        <tr>
+                                            <td>题目id</td>
+                                            <td>题目</td>
+                                            <td>答案</td>
+                                            <td>分值</td>
+                                        </tr>
+                                    </table>
+                                    <button class = "btn btn-primary"  data-toggle="collapse" data-target="#fillininsert">添加题目</button>
+                                    <div id="fillininsert" class="collapse">
+                                        <table id = "fillininserttable" class="table table-condensed table-hover table-striped" >
+                                            <tr>
+                                                <td>题目</td>
+                                                <td>答案</td>
+                                                <td>分值</td>
+                                                <td>保存</td>
+                                            </tr>
+                                            <tr>
+                                                <form th:action="@{../exam/insertfillin}" th:method="post">
+                                                    <input class = "examidinputer" type="hidden" name="examid"/>
+                                                    <td><input type="text" class="form-control" name = "qname"/></td>
+                                                    <td><input type="text" class="form-control" name = "answer"/></td>
+                                                    <td><input type="text" class="form-control" name = "score"/></td>
+                                                    <td><button type = "submit" class = "btn btn-primary">保存</button></td>
+                                                </form>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="TFcontainer">
+                                    <table id = "tftable" class="table table-condensed table-hover table-striped" >
+                                        <tr>
+                                            <td>题目id</td>
+                                            <td>题目</td>
+                                            <td>答案</td>
+                                            <td>分值</td>
+                                        </tr>
+                                    </table>
+                                    <button class = "btn btn-primary"  data-toggle="collapse" data-target="#tfinsert">添加题目</button>
+                                    <div id="tfinsert" class="collapse">
+                                        <table id = "tfinserttable" class="table table-condensed table-hover table-striped" >
+                                            <tr>
+                                                <td>题目</td>
+                                                <td>答案</td>
+                                                <td>分值</td>
+                                                <td>保存</td>
+                                            </tr>
+                                            <tr>
+                                                <form th:action="@{../exam/inserttf}" th:method="post">
+                                                    <input class = "examidinputer" type="hidden" name="examid"/>
+                                                    <td><input type="text" class="form-control" name = "qname"/></td>
+                                                    <td><input type="text" class="form-control" name = "answer"/></td>
+                                                    <td><input type="text" class="form-control" name = "score"/></td>
+                                                    <td><button type = "submit" class = "btn btn-primary">保存</button></td>
+                                                </form>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="subcontainer">
+                                    <table id = "subtable" class="table table-condensed table-hover table-striped" >
+                                        <tr>
+                                            <td>题目id</td>
+                                            <td>题目</td>
+                                            <td>分值</td>
+                                        </tr>
+                                    </table>
+                                    <button id = "subinsertbtn" class = "btn btn-primary"  data-toggle="collapse" data-target="#subinsert">添加题目</button>
+                                    <div id="subinsert" class="collapse">
+                                        <table id = "subinserttable" class="table table-condensed table-hover table-striped" >
+                                            <tr>
+                                                <td>题目</td>
+                                                <td>分值</td>
+                                                <td>保存</td>
+                                            </tr>
+                                            <tr>
+                                                <form th:action="@{../exam/insertsub}" th:method="post">
+                                                    <input class = "examidinputer" type="hidden" name="examid"/>
+                                                    <td><input type="text" class="form-control" name = "qname"/></td>
+                                                    <td><input type="text" class="form-control" name = "score"/></td>
+                                                    <td><button type = "submit" class = "btn btn-primary">保存</button></td>
+                                                </form>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="correctcontainer">
+                            <table id = "sqtable" class="table table-condensed table-hover table-striped" >
+                                <tr>
+                                    <td>题目id</td>
+                                    <td>题目</td>
+                                    <td>学生答案</td>
+                                    <td>分数</td>
+                                    <td>满分</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="examinsertModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="margin-top: 100px">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="examinsertModalLabel">添加考试</h4>
+                </div>
+                <div class="modal-body">
+                    <form id = "examinsertForm" th:action="@{../exam/insertexam}" th:method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="courseid" th:value="${courseid}"/>
+                        <div class="input-group">
+                            <span class="input-group-addon">考试名</span>
+                            <input type="text" class="form-control" name = "examname">
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-addon">开始时间</span>
+                            <input type="text" class="form-control" name = "starttime">
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-addon">结束时间</span>
+                            <input type="text" class="form-control" name = "endtime">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">添加</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="contestinsertModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="margin-top: 100px">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="contestinsertModalLabel">添加比赛</h4>
+                </div>
+                <div class="modal-body">
+                    <form id = "contestinsertForm" th:action="@{../exam/insertcontest}" th:method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="courseid" th:value="${courseid}"/>
+                        <div class="input-group">
+                            <span class="input-group-addon">考试名</span>
+                            <input type="text" class="form-control" name = "examname">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">添加</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

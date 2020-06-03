@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<link href="../css/crspointPage.css" rel="stylesheet" type="text/css">
+<link href="../css/home.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.staticfile.org/jquery/3.4.0/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="../js/jquery.form.js"></script>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script th:inline = "javascript">
+        $(document).ready(function(){
+            /*console.log([[${isExist}]]);
+            console.log([[${theUser}]]);*/
+            if([[${isExist}]]==true){
+                $("#userhead").text([[${theUser.username}]]);
+                $("#userdrag").append("<li><a href=\"/user\">用户中心</a></li>");
+                $("#userdrag").append("<li><a id = \"logout\">登出</a></li>");
+                $("#userprofile").attr("src", "../img/profile/user_" + [[${theUser.getProfile()}]]);
+                $("#logout").click(function () {
+                    $.removeCookie('userid',{ path: '/'});
+                    $.removeCookie('userpassword',{ path: '/'});
+                    $(location).attr('href', '../');
+                });
+            }else{
+                $("#userhead").text("用户");
+                $("#userdrag").append("<li><a href=\"/user/loginuser\">登录</a></li>");
+                $("#userdrag").append("<li><a href=\"/user/insertuser\">注册</a></li>");
+            }
+        });
+    </script>
+    <script th:inline = "javascript">
+        $(document).ready(function(){
+            $("#taskbtn").click(function(){
+                var player =  $("#videoplayer").get(0);
+                player.pause();
+                player.currentTime = 0;
+            })
+            $("#commentsbtn").click(function(){
+                $("#videocontainer").hide("fast");
+                $("#taskcontainer").hide("fast");
+                $("#commentscontainer").show("fast");
+                var player =  $("#videoplayer").get(0);
+                player.pause();
+                player.currentTime = 0;
+
+            })
+
+            $(".choice").mouseenter(function(){
+                $(this).css({"background": "lightgrey"});
+            })
+            $(".choice").mouseleave(function () {
+                $(this).css({"background": "white"});
+            })
+            $(".choice").click(function(){
+
+                if($(this).parent().hasClass("active")){
+                    if($(this).hasClass("active")){
+                        $(this).css({"background": "white"});
+                        $(this).bind("mouseenter", function(){
+                            $(this).css({"background": "lightgrey"});
+                        }).bind('mouseleave', function(){
+                            $(this).css({"background": "white"});
+                        });
+                        $(this).removeClass("active");
+                        $(this).parent().removeClass("active");
+                    }else{
+                        var list = $(this).parent().children(".choice");
+                        list.removeClass("active");
+                        list.bind("mouseenter", function(){
+                            $(this).css({"background": "lightgrey"});
+                        }).bind('mouseleave', function(){
+                            $(this).css({"background": "white"});
+                        });
+                        list.css({"background": "white"});
+                        $(this).css({"background": "lightgrey"});
+                        $(this).unbind('mouseenter').unbind('mouseleave');
+                        $(this).addClass("active")
+                    }
+                }else{
+                    $(this).css({"background": "lightgrey"});
+                    $(this).unbind('mouseenter').unbind('mouseleave');
+                    $(this).addClass("active");
+                    $(this).parent().addClass("active");
+                }
+
+            })
+            $("#submitanswer").click(function () {
+                var score = 0;
+                var choicesum = 0;
+                var choicevalue = 0;
+                $(".choicequestion").each(function () {
+                    //选择题
+                    choicesum++;
+                    var answer = $(this).find(".answer").text();
+                    var choicescore = $(this).find(".choicescore").text()*1;
+                    if($(this).children().hasClass("active")){
+                        $($(this).find(".choice")).each(function () {
+                            if($(this).hasClass("active")){
+                                if($(this).attr("id")==answer){
+                                    $(this).css({"background": "lightgreen"});
+                                    choicevalue++;
+                                    score+=choicescore;
+                                }else{
+                                    $(this).css({"background": "red"});
+                                }
+                            }else{
+                                if($(this).attr("id")==answer){
+                                    $(this).css({"background": "lightgreen"});
+                                }
+                            }
+                            $(this).unbind('mouseenter').unbind('mouseleave');
+                        })
+                    }else{
+                        $($(this).find(".choice")).each(function () {
+                            if($(this).attr("id")==answer){
+                                $(this).css({"background": "orange"});
+                            }
+                            $(this).unbind('mouseenter').unbind('mouseleave');
+                        })
+                    }
+                })
+
+
+                var tfsum = 0;
+                var tfvalue = 0;
+                $(".tfquestion").each(function () {
+                    //判断题
+                    tfsum++;
+                    var answer = $(this).find(".tfanswer").text();
+                    var tfscore = $(this).find(".tfscore").text()*1;
+                    if($(this).children().hasClass("active")){
+                        $($(this).find(".choice")).each(function () {
+                            if($(this).hasClass("active")){
+                                if($(this).attr("id")==answer){
+                                    $(this).css({"background": "lightgreen"});
+                                    score+=tfscore;
+                                    tfvalue++;
+                                }else{
+                                    $(this).css({"background": "red"});
+                                }
+                            }else{
+                                if($(this).attr("id")==answer){
+                                    $(this).css({"background": "lightgreen"});
+                                }
+                            }
+                            $(this).unbind('mouseenter').unbind('mouseleave');
+                        })
+                    }else{
+                        $($(this).find(".choice")).each(function () {
+                            if($(this).attr("id")==answer){
+                                $(this).css({"background": "orange"});
+                            }
+                            $(this).unbind('mouseenter').unbind('mouseleave');
+                        })
+                    }
+                })
+
+
+                var fillinsum = 0;
+                var fillinvalue = 0;
+                $(".fillinquestion").each(function () {
+                    //填空题
+                    fillinsum++;
+                    var fillinscore = $(this).find(".fillinscore").text()*1;
+                    if($($(this).find(".fillininputer")).val().trim()===$($(this).find(".fillinanswer")).text().trim()){
+                        score+=fillinscore;
+                        fillinvalue++;
+                    }
+                    $($(this).find(".fillinanswer")).show("fast");
+
+                })
+
+
+
+                $.post("../score/taskinsert", {
+                    "userid": [[${theUser.userid}]],
+                    "crspointid":[[${crspointid}]],
+                    "score":score
+                },function (res) {
+                    alert(res);
+                    if(res == "该测试已提交过，不会记入分数"){}else{
+                        $.post("../score/updatechoice", {
+                            "studentid": [[${theUser.userid}]],
+                            "courseid":[[${courseid}]],
+                            "choicescore":choicevalue,
+                            "choicesum":choicesum
+                        })
+                        $.post("../score/updatetf", {
+                            "studentid": [[${theUser.userid}]],
+                            "courseid":[[${courseid}]],
+                            "tfscore":tfvalue,
+                            "tfsum":tfsum
+                        })
+                        $.post("../score/updatefillin", {
+                            "studentid": [[${theUser.userid}]],
+                            "courseid":[[${courseid}]],
+                            "fillinscore":fillinvalue,
+                            "fillinsum":fillinsum
+                        })
+                    }
+                })
+            })
+            $(".viewreplybtn").click(function(){
+                $(this).parent().children("#replycontainer").toggle("fast");
+            })
+
+            $("#addcommentsForm").ajaxForm(function (data) {
+                alert(data);
+                location.reload();
+            });
+
+            $(".addreplyForm").ajaxForm(function (data) {
+                alert(data);
+                location.reload();
+            });
+        });
+    </script>
+</head>
+<body>
+<div class="top">
+    <ul>
+        <li><a href="../">首页</a></li>
+        <li><a style="background-color: grey;">课程中心</a>
+            <ul>
+                <li><a href="../course">选课中心</a></li>
+                <li><a href="../chapter">已选课程</a></li>
+                <li><a href="../course/manage">课程管理</a></li>
+            </ul>
+        </li>
+        <li><a>考试中心</a>
+            <ul>
+                <li><a href="../exam">我的考试</a></li>
+                <li><a href="../exam/manage">考试管理</a></li>
+            </ul>
+        </li>
+        <li><a>学习记录</a>
+            <ul>
+                <li><a href="../progress">学习进度</a></li>
+                <li><a href="../score">成绩查询</a></li>
+            </ul>
+        </li>
+        <li style="float: right">
+            <a id = "userhead"></a>
+            <ul style="right:0" id = "userdrag" >
+            </ul>
+        </li>
+        <li style="float: right">
+            <img id = "userprofile" src = "../img/profile/user_0.png" class="img-circle" style="width: 40px; height: 40px; margin-top: 5px; margin-left: 50px"/>
+        </li>
+    </ul>
+</div>
+<div class="mainpage">
+    <ul id="myTab" class="nav nav-tabs nav-justified">
+        <li class="active">
+            <a href="#videocontainer" data-toggle="tab">
+                视频
+            </a>
+        </li>
+        <li>
+            <a href="#taskcontainer" data-toggle="tab">
+                测验
+            </a>
+        </li>
+        <li>
+            <a href="#commentscontainer" data-toggle="tab">
+                评论
+            </a>
+        </li>
+    </ul>
+    <div id="myTabContent" class="tab-content">
+        <div class="tab-pane fade in active" id="videocontainer">
+            <h3 class="page-header">视频</h3>
+            <h5 style="color:#aaa; margin-top:10px">video</h5>
+            <video id="videoplayer" width="600" height="400" align="center" controls>
+                <source th:src="@{'/vedio/' + ${crspointid} + '.mp4'}" type="video/mp4">
+                <source th:src="@{'/vedio/' + ${crspointid} + '.ogg'}" type="video/ogg">
+                您的浏览器不支持 HTML5 video 标签。
+            </video>
+        </div>
+        <div class="tab-pane fade" id="taskcontainer" >
+            <h3 class="page-header">测试</h3>
+            <h5 style="color:#aaa; margin-top:10px">task test</h5>
+            <h3 class="page-header">选择题</h3>
+            <h5 style="color:#aaa; margin-top:10px">Choice Question</h5>
+            <div class="panel panel-default choicequestion" th:each="quest:${choicequestionlist}">
+                <div class="panel-heading">
+                    <span class="panel-title" th:text = "${questStat.count}"></span>.
+                    <span class="panel-title" th:text = "${quest.getQname()}"></span>
+                </div>
+                <div class="panel-body" >
+                    <button id = "A" type="button" class="btn btn-default btn-sm btn-block choice">
+                        <span>A.</span>
+                        <span th:text = "${quest.getC1()}" class = "choiceA"></span>
+                    </button>
+                    <button id = "B" type="button" class="btn btn-default btn-sm btn-block choice">
+                        <span>B.</span>
+                        <span th:text = "${quest.getC2()}"></span>
+                    </button>
+                    <button id = "C" type="button" class="btn btn-default btn-sm btn-block choice">
+                        <span>C.</span>
+                        <span th:text = "${quest.getC3()}"></span>
+                    </button>
+                    <button id = "D" type="button" class="btn btn-default btn-sm btn-block choice">
+                        <span>D.</span>
+                        <span th:text = "${quest.getC4()}"></span>
+                    </button>
+                    <div class = "answer" th:text = "${quest.getAnswer()}" style="display: none"></div>
+                    <div class = "choicescore" th:text = "${quest.getScore()}" style="display: none"></div>
+                </div>
+            </div>
+            <h3 class="page-header">判断题</h3>
+            <h5 style="color:#aaa; margin-top:10px">True-False Question</h5>
+            <div class="panel panel-default tfquestion" th:each="quest:${tfquestionlist}">
+                <div class="panel-heading">
+                    <span class="panel-title" th:text = "${questStat.count}"></span>.
+                    <span class="panel-title" th:text = "${quest.getQname()}"></span>
+                </div>
+                <div class="panel-body" >
+                    <button id = "T" type="button" class="btn btn-default btn-sm btn-block choice">
+                        <span>正确</span>
+                    </button>
+                    <button id = "F" type="button" class="btn btn-default btn-sm btn-block choice">
+                        <span>错误</span>
+                    </button>
+                    <div class = "tfanswer" th:text = "${quest.getAnswer()}" style="display: none"></div>
+                    <div class = "tfscore" th:text = "${quest.getScore()}" style="display: none"></div>
+                </div>
+            </div>
+            <h3 class="page-header">填空题</h3>
+            <h5 style="color:#aaa; margin-top:10px">Fillin Question</h5>
+            <div class="panel panel-default fillinquestion" th:each="quest:${fillinquestionlist}">
+                <div class="panel-heading">
+                    <span class="panel-title" th:text = "${questStat.count}"></span>.
+                    <span class="panel-title" th:text = "${quest.getQname()}"></span>
+                </div>
+                <div class="panel-body">
+                    <input type="text" class="form-control fillininputer" style="width: 50%">
+                    <span class = "fillinanswer" th:text = "${quest.getAnswer()}" style="display: none"></span>
+                    <span class = "fillinscore" th:text = "${quest.getScore()}" style="display: none"></span>
+                </div>
+            </div>
+            <button type="button" id="submitanswer" class="btn btn-primary" >提交</button>
+
+        </div>
+        <div class="tab-pane fade" id="commentscontainer">
+            <h3 class="page-header">评论</h3>
+            <h5 style="color:#aaa; margin-top:10px">commits</h5>
+            <div th:each="cmtmap:${commentsList}" style="text-align:left">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <span th:text = "${cmtmapStat.count}"></span>
+                        <span>
+                            <img th:src="@{/img/profile/user_{filename}(filename=${cmtmap.key.getProfile()})}" class="img-circle" style="width: 25px; height: 25px; margin-left: 10px"/>
+                        </span>
+                        <span class="panel-title" th:text = "${cmtmap.key.getUsername()}"></span>
+                    </div>
+                    <div class="panel-body" th:text = "${cmtmap.key.getContent()}"></div>
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class = "replyviewbtn" data-toggle="collapse"  th:href="@{#replycontainer_{filename}(filename=${cmtmapStat.count})}">
+                                查看回复
+                            </a>
+                        </h4>
+                    </div>
+
+                    <div th:id= "@{replycontainer_{filename}(filename=${cmtmapStat.count})}" class="panel-collapse collapse">
+                        <div class="panel-body" th:each="reply:${cmtmap.value}">
+                            <span>
+                                <img th:src="@{/img/profile/user_{filename}(filename=${reply.getProfile()})}" class="img-circle" style="width: 25px; height: 25px; margin-left: 10px"/>
+                            </span>
+                            <span th:text = "${reply.getUsername()}"></span>
+                            <span th:text = "${reply.getContent()}"></span>
+                        </div>
+                        <form class = "addreplyForm" th:action="@{/comments/reply}" th:method="post">
+                            <input  type="hidden" name="commentsid" th:value = "${cmtmap.key.getCommentsid()}"/>
+                            <input  type="hidden" name="userid" th:value = "${theUser.getUserid()}"/>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="content" placeholder="回复留言...">
+                                <span class="input-group-btn">
+                                    <input type="submit" class="btn btn-default" value="回复" />
+                                </span>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+
+            </div>
+            <form id = "addcommentsForm" th:action="@{/comments/add}" th:method="post">
+                <input  type="hidden" name="crspointid" th:value = "${crspointid}"/>
+                <input  type="hidden" name="userid" th:value = "${theUser.getUserid()}"/>
+                <div class="input-group">
+                    <input type="text" class="form-control" name="content" placeholder="发表评论...">
+                    <span class="input-group-btn">
+                        <input type="submit" class="btn btn-default" value="讨论" />
+                    </span>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

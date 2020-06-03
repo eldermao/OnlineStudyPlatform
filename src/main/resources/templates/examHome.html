@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<link href="../css/home.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.staticfile.org/jquery/3.4.0/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="../js/jquery.form.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $(".examForm").ajaxForm(function (data, status, xhr, myForm) {
+                if(data=="已考试过，不能重复考试"){
+                    alert(data);
+                    location.reload();
+                }else{
+                    $(myForm).parent().find(".examingForm").submit();
+                }
+            });
+        })
+    </script>
+
+    <script th:inline = "javascript">
+        $(document).ready(function(){
+            /*console.log([[${isExist}]]);
+            console.log([[${theUser}]]);*/
+            if([[${isExist}]]==true){
+                $("#userhead").text([[${theUser.username}]]);
+                $("#userdrag").append("<li><a href=\"/user\">用户中心</a></li>");
+                $("#userdrag").append("<li><a id = \"logout\">登出</a></li>");
+                $("#userprofile").attr("src", "../img/profile/user_" + [[${theUser.getProfile()}]]);
+                $("#logout").click(function () {
+                    $.removeCookie('userid',{ path: '/'});
+                    $.removeCookie('userpassword',{ path: '/'});
+                    $(location).attr('href', '../');
+                });
+            }else{
+                $("#userhead").text("用户");
+                $("#userdrag").append("<li><a href=\"/user/loginuser\">登录</a></li>");
+                $("#userdrag").append("<li><a href=\"/user/insertuser\">注册</a></li>");
+            }
+        });
+    </script>
+</head>
+<body>
+<div class="top">
+    <ul>
+        <li><a href="../">首页</a></li>
+        <li><a>课程中心</a>
+            <ul>
+                <li><a href="../course">选课中心</a></li>
+                <li><a href="../chapter">已选课程</a></li>
+                <li><a href="../course/manage">课程管理</a></li>
+            </ul>
+        </li>
+        <li><a style="background-color: grey;">考试中心</a>
+            <ul>
+                <li><a href="../exam">我的考试</a></li>
+                <li><a href="../exam/manage">考试管理</a></li>
+            </ul>
+        </li>
+        <li><a>学习记录</a>
+            <ul>
+                <li><a href="../progress">学习进度</a></li>
+                <li><a href="../score">成绩查询</a></li>
+            </ul>
+        </li>
+        <li style="float: right">
+            <a id = "userhead"></a>
+            <ul style="right:0" id = "userdrag" >
+            </ul>
+        </li>
+        <li style="float: right">
+            <img id = "userprofile" src = "../img/profile/user_0.png" class="img-circle" style="width: 40px; height: 40px; margin-top: 5px; margin-left: 50px"/>
+        </li>
+    </ul>
+</div>
+<div class="mainpage">
+    <h3 class="page-header">我的考试</h3>
+    <h5 style="color:#aaa; margin-top:10px">My Exam</h5>
+    <table id = "coursetable" class="table table-condensed table-hover table-striped" >
+        <tr>
+            <td>考试序号</td>
+            <td>考试名</td>
+            <td>课程序号</td>
+            <td>课程名</td>
+            <td>起始时间</td>
+            <td>结束时间</td>
+            <td>状态</td>
+        </tr>
+        <tr th:each="exam:${examlist}">
+            <td th:text="${exam.getExamid()}"></td>
+            <div th:if="${exam.getStarttime()} gt ${#dates.format(new java.util.Date().getTime(), 'yyyyMMdd')}">
+                <td th:text="${exam.getExamname()}"></td>
+            </div>
+            <div th:if="${exam.getEndtime()} lt ${#dates.format(new java.util.Date().getTime(), 'yyyyMMdd')}">
+                <td th:text="${exam.getExamname()}"></td>
+            </div>
+            <div th:if="${exam.getStarttime()} le ${#dates.format(new java.util.Date().getTime(), 'yyyyMMdd')}">
+                <div th:if=" ${exam.getEndtime()} ge ${#dates.format(new java.util.Date().getTime(), 'yyyyMMdd')}">
+                    <td>
+                        <form class = "examForm" th:action="@{../exam/isexamed}" th:method="post">
+                            <input  type="hidden" name="studentid"th:value = "${theUser.userid}"/>
+                            <input  type="hidden" name="examid" class = "examid" th:value = "${exam.getExamid()}"/>
+                            <input type="submit" class="btn btn-link" th:value="${exam.getExamname()}"/>
+                        </form>
+                        <form class = "examingForm" th:action="@{../exam/examing}" th:method="post">
+                            <input  type="hidden" name="examid" class = "examid" th:value = "${exam.getExamid()}"/>
+                            <input  type="hidden" name="groupid" value = "0"/>
+                        </form>
+                    </td>
+                </div>
+            </div>
+            <td th:text="${exam.getCourseid()}"></td>
+            <td th:text="${exam.getCoursename()}"></td>
+            <td th:text="${exam.getStarttime()}"></td>
+            <td th:text="${exam.getEndtime()}"></td>
+            <div th:if="${exam.getStarttime()} gt ${#dates.format(new java.util.Date().getTime(), 'yyyyMMdd')}">
+                <td><p class="text-danger">未开始</p></td>
+            </div>
+            <div th:if="${exam.getStarttime()} le ${#dates.format(new java.util.Date().getTime(), 'yyyyMMdd')}">
+                <div th:if=" ${exam.getEndtime()} ge ${#dates.format(new java.util.Date().getTime(), 'yyyyMMdd')}">
+                    <td><p class="text-success">可开始</p></td>
+                </div>
+            </div>
+            <div th:if="${exam.getEndtime()} lt ${#dates.format(new java.util.Date().getTime(), 'yyyyMMdd')}">
+                <td><p class="text-danger">已结束</p></td>
+            </div>
+        </tr>
+    </table>
+    <h3 class="page-header">我的比赛</h3>
+    <h5 style="color:#aaa; margin-top:10px">My Contest</h5>
+    <table id = "contesttable" class="table table-condensed table-hover table-striped" >
+        <tr>
+            <td>比赛序号</td>
+            <td>比赛名</td>
+            <td>小组1</td>
+            <td>小组2</td>
+            <td>起始时间</td>
+            <td>结束时间</td>
+            <td>状态</td>
+        </tr>
+        <tr th:each="ctst:${contestlist}">
+            <td th:text="${ctst.getContestid()}"></td>
+            <div th:if="${ctst.getStarttime()} gt ${#dates.format(new java.util.Date().getTime(), 'yyyyMMdd')}">
+                <td th:text="${ctst.getExamname()}"></td>
+            </div>
+            <div th:if="${ctst.getEndtime()} lt ${#dates.format(new java.util.Date().getTime(), 'yyyyMMdd')}">
+                <td th:text="${ctst.getExamname()}"></td>
+            </div>
+            <div th:if="${ctst.getStarttime()} le ${#dates.format(new java.util.Date().getTime(), 'yyyyMMdd')}">
+                <div th:if=" ${ctst.getEndtime()} ge ${#dates.format(new java.util.Date().getTime(), 'yyyyMMdd')}">
+                    <td>
+                        <form class = "examForm" th:action="@{../exam/isexamed}" th:method="post">
+                            <input  type="hidden" name="studentid"th:value = "${theUser.userid}"/>
+                            <input  type="hidden" name="examid" class = "examid" th:value = "${ctst.getExamid()}"/>
+                            <input type="submit" class="btn btn-link" th:value="${ctst.getExamname()}"/>
+                        </form>
+                        <form class = "examingForm" th:action="@{../exam/examing}" th:method="post">
+                            <input  type="hidden" name="examid" class = "examid" th:value = "${ctst.getExamid()}"/>
+                            <input  type="hidden" name="groupid" th:value = "${ctst.getG1id()}"/>
+                        </form>
+                    </td>
+                </div>
+            </div>
+            <td th:text="${ctst.getG1name()}"></td>
+            <td th:text="${ctst.getG2name()}"></td>
+            <td th:text="${ctst.getStarttime()}"></td>
+            <td th:text="${ctst.getEndtime()}"></td>
+            <div th:if="${ctst.getStarttime()} gt ${#dates.format(new java.util.Date().getTime(), 'yyyyMMdd')}">
+                <td><p class="text-danger">未开始</p></td>
+            </div>
+            <div th:if="${ctst.getStarttime()} le ${#dates.format(new java.util.Date().getTime(), 'yyyyMMdd')}">
+                <div th:if=" ${ctst.getEndtime()} ge ${#dates.format(new java.util.Date().getTime(), 'yyyyMMdd')}">
+                    <td><p class="text-success">可开始</p></td>
+                </div>
+            </div>
+            <div th:if="${ctst.getEndtime()} lt ${#dates.format(new java.util.Date().getTime(), 'yyyyMMdd')}">
+                <td><p class="text-danger">已结束</p></td>
+            </div>
+
+        </tr>
+    </table>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,40 @@
+#btncontainer{
+    text-align: center;
+}
+#videocontainer{
+    text-align: center;
+}
+#taskcontainer{
+    margin:0 auto;
+    width:650px;
+    text-align: center;
+}
+#commentscontainer{
+    margin:0 auto;
+    width:650px;
+    text-align: center;
+}
+#videobtn{
+    margin-right:50px;
+}
+#commentsbtn{
+    margin-left:50px;
+}
+.choice{
+    background-color: aliceblue;
+}
+.fillinquestion{
+    text-align: left;
+}
+.choicequestion{
+    text-align: left;
+}
+#replycontainer{
+    margin:0 auto;
+    width:500px;
+    width:80%;
+    text-align: left;
+}
+.commentsbox{
+    text-align: left;
+}

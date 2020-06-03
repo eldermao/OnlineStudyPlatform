@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+test
+<div class="bbD">
+    <table border="1" th:cellspacing="0" th:cellpadding="0">
+        <tr>
+            <td width="100px" class="tdColor">id</td>
+            <td width="230px" class="tdColor">密码</td>
+            <td width="100px" class="tdColor">年龄</td>
+        </tr>
+        <tr th:each="usr:${userlist}">
+            <td th:text="${usr.username}" height="40px"></td>
+            <td th:text="${usr.userpassword}" height="40px"></td>
+            <td th:text="${usr.userage}" height="40px"></td>
+        </tr>
+    </table>
+</div>
+<div class = "back">
+    <a th:href="@{/}" >back</a>
+</div>
+</body>
+</html>

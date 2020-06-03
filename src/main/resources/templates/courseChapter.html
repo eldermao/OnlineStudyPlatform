@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<link href="../css/home.css" rel="stylesheet" type="text/css">
+<link href="../css/courseChapter.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.staticfile.org/jquery/3.4.0/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="../js/jquery.form.js"></script>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script th:inline = "javascript">
+        $(document).ready(function(){
+            /*console.log([[${isExist}]]);
+            console.log([[${theUser}]]);*/
+            if([[${isExist}]]==true){
+                $("#userhead").text([[${theUser.username}]]);
+                $("#userdrag").append("<li><a href=\"/user\">用户中心</a></li>");
+                $("#userdrag").append("<li><a id = \"logout\">登出</a></li>");
+                $("#userprofile").attr("src", "../img/profile/user_" + [[${theUser.getProfile()}]]);
+                $("#logout").click(function () {
+                    $.removeCookie('userid',{ path: '/'});
+                    $.removeCookie('userpassword',{ path: '/'});
+                    $(location).attr('href', '../');
+                });
+            }else{
+                $("#userhead").text("用户");
+                $("#userdrag").append("<li><a href=\"/user/loginuser\">登录</a></li>");
+                $("#userdrag").append("<li><a href=\"/user/insertuser\">注册</a></li>");
+            }
+        });
+    </script>
+
+    <script th:inline = "javascript">
+        $(document).ready(function(){
+            $("#contestchallengeForm").ajaxForm(function (data) {
+                alert(data);
+                location.reload();
+            });
+
+            $("#insertGroupForm").ajaxForm(function (data) {
+                alert(data);
+                location.reload();
+            });
+
+            $("#applygroupForm").ajaxForm(function (data) {
+                alert(data);
+                location.reload();
+            });
+
+            $(".challangebtn").click(function () {
+                $("#g2id").val($(this).val())
+            })
+            $(".applybtn").click(function () {
+                $("#applygroupname").text($(this).val())
+            })
+
+        });
+    </script>
+</head>
+<body>
+<div class="top">
+    <ul>
+        <li><a href="../">首页</a></li>
+        <li><a style="background-color: grey;">课程中心</a>
+            <ul>
+                <li><a href="../course">选课中心</a></li>
+                <li><a href="../chapter">已选课程</a></li>
+                <li><a href="../course/manage">课程管理</a></li>
+            </ul>
+        </li>
+        <li><a>考试中心</a>
+            <ul>
+                <li><a href="../exam">我的考试</a></li>
+                <li><a href="../exam/manage">考试管理</a></li>
+            </ul>
+        </li>
+        <li><a>学习记录</a>
+            <ul>
+                <li><a href="../progress">学习进度</a></li>
+                <li><a href="../score">成绩查询</a></li>
+            </ul>
+        </li>
+        <li style="float: right">
+            <a id = "userhead"></a>
+            <ul style="right:0" id = "userdrag" >
+            </ul>
+        </li>
+        <li style="float: right">
+            <img id = "userprofile" src = "../img/profile/user_0.png" class="img-circle" style="width: 40px; height: 40px; margin-top: 5px; margin-left: 50px"/>
+        </li>
+    </ul>
+</div>
+
+<div class="mainpage">
+    <div id="maincontainer">
+        <div id = "rightcontainer">
+            <h3 class="page-header">我的小组</h3>
+            <h5 style="color:#aaa; margin-top:10px">My Group</h5>
+
+            <div id = "mygroup">
+                <table class="table table-condensed table-hover table-striped" >
+                    <tr>
+                        <td>小组名</td>
+                    </tr>
+                    <tr th:switch = "${isGrouped}">
+                        <div th:case = "true">
+                            <td th:text="${theGroup.getGroupname()}"></td>
+                        </div>
+                        <div th:case = "false">
+                            <td>暂未加入小组</td>
+                        </div>
+
+                    </tr>
+                </table>
+            </div>
+            <h3 class="page-header">小组列表</h3>
+            <h5 style="color:#aaa; margin-top:10px">Group List</h5>
+
+            <table class="table table-condensed table-hover table-striped" >
+                <tr>
+                    <td>小组名</td>
+                </tr>
+                <tr th:each="grp:${grouplist}">
+                    <td class = "groupnametemp" th:text="${grp.getGroupname()}"></td>
+                    <td th:if="${isGrouped} eq false">
+                        <input type="hidden" class="groupidtemp" th:value = "${grp.getGroupid()}"/>
+                        <button class = "btn btn-primary applybtn" data-toggle="modal" data-target="#groupapplyModal" th:value = "${grp.getGroupname()}">加入</button>
+                    </td>
+                    <td th:if="${isGrouped} eq true">
+                        <button type="button" class = "btn btn-primary challangebtn"  data-toggle="modal" data-target="#challengeModal" th:value = "${grp.getGroupid()}">挑战</button>
+                    </td>
+                </tr>
+            </table>
+            <div><button id="insertgrouptrigger" th:if="${isGrouped} eq false" class = "btn btn-primary"  data-toggle="modal" data-target="#groupinsertModal" >添加小组</button></div>
+        </div>
+        <div id = "leftcontainer">
+            <h3 class="page-header">章节知识点</h3>
+            <h5 style="color:#aaa; margin-top:10px">Chapter&Knowledge point</h5>
+            <div th:each="cptmap:${chapterlist}">
+                <h3 class="page-header" th:text = "${cptmap.key.getChaptername()}"></h3>
+                <ul th:each="pnt:${cptmap.value}">
+                    <li>
+                        <form th:action="@{../point}" th:method="post">
+                            <input type="hidden" name="crspointid" th:value = "${pnt.getcrspointid()}"/>
+                            <input type="submit" class="btn btn-link" th:value="${pnt.getcrspointname()}"  />
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="modal fade" id="challengeModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="challengeModalLabel">发起挑战</h4>
+                    </div>
+                    <form id = "contestchallengeForm" th:action="@{../exam/challenge}" th:method="post">
+                        <input type="hidden" name="g1id" th:value="${theGroup.getGroupid()}"/>
+                        <input type="hidden" name="g2id" id = "g2id"/>
+                        <div class="modal-body">
+                            <div class="radio"  th:each="contest:${contestlist}">
+                                <label>
+                                    <input type="radio" name="examid" th:value="${contest.getExamid()}" th:text = "${contest.getExamname()}">
+                                </label>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-addon">开始时间</span>
+                                <input type="text" class="form-control" name="starttime"/>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-addon">结束时间</span>
+                                <input type="text" class="form-control" name="endtime"/>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-danger">添加</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="groupinsertModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="groupinsertModalLabel">添加小组</h4>
+                    </div>
+                    <form id = "insertGroupForm" th:action="@{../group/insert}" th:method="post">
+                        <div class="modal-body">
+                            <input type="hidden" name="courseid" th:value = "${courseid}"/>
+                            <input type="hidden" name="leaderid" th:value = "${theUser.userid}"/>
+                            <div class="input-group">
+                                <span class="input-group-addon">小组名</span>
+                                <input type="text" class="form-control" name = "groupname"/>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-danger">添加</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="groupapplyModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="groupapplyModalLabel">申请加入</h4>
+                    </div>
+                    <div class="modal-body">
+                        您确定要申请加入<span id="applygroupname"></span>吗？
+                    </div>
+                    <div class="modal-footer">
+                        <form id = "applygroupForm" th:action="@{../group/apply}" th:method="post">
+                            <input type="hidden" id="applygroupid"/>
+                            <button type="submit" class="btn btn-primary">申请</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id = "bot">im bottom</div>
+
+</div>
+</body>
+</html>

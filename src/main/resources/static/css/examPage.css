@@ -1,0 +1,24 @@
+.choice{
+    background-color: aliceblue;
+}
+#examcontainer{
+    margin:0 auto;
+    width:650px;
+    text-align: center;
+}
+.fillinquestion{
+    text-align: left;
+}
+.choicequestion{
+    text-align: left;
+}
+.tfquestion{
+    text-align: left;
+}
+.subjectivequestion{
+    text-align: left;
+}
+.subjectiveinputer{
+    width:100%;
+    height: 100%;
+}

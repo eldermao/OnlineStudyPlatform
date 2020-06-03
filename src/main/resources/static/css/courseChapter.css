@@ -1,0 +1,22 @@
+#maincontainer{
+    margin:0 auto;
+    height:auto;
+    overflow: hidden;
+    text-align: center;
+}
+
+#rightcontainer{
+    position: relative;
+    width:25%;
+    float: right;
+}
+#leftcontainer{
+    position: relative;
+    width:75%;
+}
+#groupapplyModal{
+    top:50px;
+}
+#groupinsertModal{
+    top:50px;
+}

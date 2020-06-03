@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<link href="../css/home.css" rel="stylesheet" type="text/css">
+<link href="../css/userpage.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.staticfile.org/jquery/3.4.0/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="../js/jquery.form.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script th:inline = "javascript">
+        $(document).ready(function(){
+            /*console.log([[${isExist}]]);
+            console.log([[${theUser}]]);*/
+            if([[${isExist}]]==true){
+                $("#userhead").text([[${theUser.username}]]);
+                $("#userdrag").append("<li><a href=\"/user\">用户中心</a></li>");
+                $("#userdrag").append("<li><a id = \"logout\">登出</a></li>");
+                $("#userprofile").attr("src", "../img/profile/user_" + [[${theUser.getProfile()}]]);
+                $("#userimg").attr("src", "../img/profile/user_" + [[${theUser.getProfile()}]]);
+                $("#logout").click(function () {
+                    $.removeCookie('userid',{ path: '/'});
+                    $.removeCookie('userpassword',{ path: '/'});
+                    $(location).attr('href', '../');
+                });
+            }else{
+                $("#userhead").text("用户");
+                $("#userdrag").append("<li><a href=\"/user/loginuser\">登录</a></li>");
+                $("#userdrag").append("<li><a href=\"/user/insertuser\">注册</a></li>");
+            }
+        });
+    </script>
+    <script>
+        $(document).ready(function(){
+            $("#passwordupdateForm").ajaxForm(function (data) {
+                alert(data);
+                $(location).reload();
+            });
+            $("#updateinfoForm").ajaxForm(function (data) {
+                alert(data);
+                $(location).reload();
+            });
+            //修改头像
+            $('#userimg').click(function(){
+                $('#uploadimgbtn').click();
+            });
+            $("#uploadimgbtn").change(function(){
+                var file = $(this).get(0).files[0];
+                var reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload=function(e){
+                    console.log(e);
+                    $("#userimg").get(0).src = e.target.result;
+                }
+                $('#profilesubmitbtn').click();
+            })
+            //管理小组按钮
+            $(".leadgroupmanagebtn").click(function(){
+                $(".applymembercontainer").remove();
+                $(".membercontainer").remove();
+                $("#managegroupcheckgroupid").val($(this).attr("value"));
+                $.post("../group/getapply", {
+                    "groupid": $(this).attr("value")
+                },function (res) {
+                    $.each(res, function (i,val) {
+                        $("#applylisttable").append("<tr class = \"applymembercontainer\">\n" +
+                            "        <td>" + val.userid + "</td>\n" +
+                            "        <td><img src = \"../img/profile/user_" + val.profile+"\" class=\"img-circle\" style=\"width: 25px; height: 25px; margin-left: 10px\"/></td>\n" +
+                            "        <td>" + val.username + "</td>\n" +
+                            "        <td><button class = \"btn btn-primary applymemberacceptbtn\" value = \"" + val.userid + "\">接受</button></td>\n" +
+                            "        <td><button class = \"btn btn-danger applymemberrejectbtn\" value = \"" + val.userid + "\">拒绝</button></td>\n" +
+                            "    </tr>")
+                    })
+                })
+                $.post("../group/getmember", {
+                    "groupid": $(this).attr("value")
+                },function (res) {
+                    $.each(res, function (i,val) {
+                        $("#memberlisttable").append("<tr class = \"membercontainer\">\n" +
+                            "        <td>" + val.userid + "</td>\n" +
+                            "        <td><img src = \"../img/profile/user_" + val.profile+"\" class=\"img-circle\" style=\"width: 25px; height: 25px; margin-left: 10px\"/></td>\n" +
+                            "        <td>" + val.username + "</td>\n" +
+                            "        <td>" + val.userphone + "</td>\n" +
+                            "        <td>" + val.useremail + "</td>\n" +
+                            "        <td><button class = \"btn btn-primary memberrisebtn\" value = \"" + val.userid + "\">提升为组长</button></td>\n" +
+                            "        <td><button class = \"btn btn-danger memberpopbtn\" value = \"" + val.userid + "\">请出</button></td>\n" +
+                            "    </tr>")
+                    })
+                })
+                $("#managegroupcontainer").toggle("fast");
+                $("#mask").toggle("fast");
+
+            })
+            $("#applygroupdroptrigger").click(function () {
+                $.post("../group/dropapply", {
+                    "groupid": $(this).attr("value"),
+                    "studentid":[[${theUser.userid}]]
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+            $(".leadgroupdismisstrigger").click(function () {
+                $.post("../group/dismiss", {
+                    "groupid": $(this).attr("value")
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+            //接受
+            $("#applylisttable").on("click", ".applymemberacceptbtn", function () {
+                $.post("../group/accept", {
+                    "studentid": $(this).attr("value"),
+                    "groupid": $("#managegroupcheckgroupid").val()
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+            //拒绝
+            $("#applylisttable").on("click", ".applymemberrejectbtn", function () {
+                $.post("../group/reject", {
+                    "studentid": $(this).attr("value"),
+                    "groupid":$("#managegroupcheckgroupid").val()
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+            //提升为组长
+            $("#memberlisttable").on("click", ".memberrisebtn", function () {
+                $.post("../group/rise", {
+                    "studentid": $(this).attr("value"),
+                    "groupid":$("#managegroupcheckgroupid").val()
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+            //请出
+            $("#memberlisttable").on("click", ".memberpopbtn", function () {
+                $.post("../group/pop", {
+                    "studentid": $(this).attr("value"),
+                    "groupid":$("#managegroupcheckgroupid").val()
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+        });
+    </script>
+</head>
+<body>
+
+<div class="top">
+    <ul>
+        <li><a href="../">首页</a></li>
+        <li><a>课程中心</a>
+            <ul>
+                <li><a href="../course">选课中心</a></li>
+                <li><a href="../chapter">已选课程</a></li>
+                <li><a href="../course/manage">课程管理</a></li>
+            </ul>
+        </li>
+        <li><a>考试中心</a>
+            <ul>
+                <li><a href="../exam">我的考试</a></li>
+                <li><a href="../exam/manage">考试管理</a></li>
+            </ul>
+        </li>
+        <li><a>学习记录</a>
+            <ul>
+                <li><a href="../progress">学习进度</a></li>
+                <li><a href="../score">成绩查询</a></li>
+            </ul>
+        </li>
+        <li style="background-color: grey;float: right">
+            <a id = "userhead" ></a>
+            <ul style="right:0" id = "userdrag" >
+            </ul>
+        </li>
+        <li style="float: right">
+            <img id = "userprofile" src = "../img/profile/user_0.png" class="img-circle" style="width: 40px; height: 40px; margin-top: 5px; margin-left: 50px"/>
+        </li>
+    </ul>
+</div>
+<div class = "mainpage">
+    <div id="maincontainer">
+
+        <div id = "leftcontainer">
+            <h4>您好</h4>
+            <img id = "userimg" src = "../img/profile/user_0.png" class="img-circle" style="width: 100px; height: 100px;"/>
+            <form th:action="@{../user/profile}" th:method="post" enctype="multipart/form-data">
+                <input type="hidden" name="userid" th:value = "${theUser.getUserid()}"/>
+                <input type="file" id = "uploadimgbtn" accept="image/*" name="imgfile"  style="display: none"/>
+                <button type="submit" id = "profilesubmitbtn" style="display: none"></button>
+            </form>
+            <h2 th:text="${theUser.getUsername()}"></h2>
+            <ul id="taskTab" class="nav  nav-pills nav-stacked">
+                <li class="active">
+                    <a href="#infocontainer" data-toggle="tab">
+                        用户信息
+                    </a>
+                </li>
+                <li>
+                    <a href="#groupcontainer" data-toggle="tab">
+                        小组
+                    </a>
+                </li>
+                <li>
+                    <a href="#rankcontainer" data-toggle="tab">
+                        积分排行
+                    </a>
+                </li>
+                <li>
+                    <a href="#newscontainer" data-toggle="tab">
+                        消息
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div id = "rightcontainer">
+
+            <div id="myTabContent" class="tab-content">
+                <div class="tab-pane fade in active" id="infocontainer">
+                    <h3 class="page-header">用户信息</h3>
+                    <h5 style="color:#aaa; margin-top:10px">user information</h5>
+                    <div style = "width:50%; margin: 0 auto;">
+
+                        <form id = "updateinfoForm" th:action="@{/user/update}" th:method="post">
+                            <input type="hidden" name="userid" th:value = "${theUser.getUserid()}"/>
+                            <div class="input-group">
+                                <span class="input-group-addon">用户id</span>
+                                <input type="text" class="form-control" name = "userid" th:value="${theUser.getUserid()}"  disabled="disabled">
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-addon">用户名</span>
+                                <input type="text" class="form-control" name = "username" th:value="${theUser.getUsername()}">
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-addon">年龄</span>
+                                <input type="text" class="form-control" name = "userage" th:value="${theUser.getUserage()}">
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-addon">联系电话</span>
+                                <input type="text" class="form-control" name = "userphone" th:value="${theUser.getUserphone()}">
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-addon">邮箱</span>
+                                <input type="text" class="form-control" name = "useremail" th:value="${theUser.getUseremail()}">
+                            </div>
+                            <input type="submit" class="btn btn-primary" value="信息变更"  style="margin-top: 20px"/>
+                        </form>
+                        <button id="passwordupdatebtn" class="btn btn-warning" style="margin-top: 50px" data-toggle="modal" data-target="#passwordupdateModal" >密码修改</button>
+                    </div>
+
+                </div>
+                <div class="tab-pane fade" id="groupcontainer">
+                    <div style="height: 100%; width:100%;position: absolute;">
+                        <h3 class="page-header">小组</h3>
+                        <h5 style="color:#aaa; margin-top:10px">group</h5>
+                        <ul id="groupTab" class="nav nav-tabs nav-justified">
+                            <li class="active">
+                                <a href="#mygroupcontainer" data-toggle="tab">
+                                    我参加的小组
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#leadgroupcontainer" data-toggle="tab">
+                                    我管理的小组
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#applygroupcontainer" data-toggle="tab">
+                                    申请中的小组
+                                </a>
+                            </li>
+                        </ul>
+                        <div id="TabContent" class="tab-content">
+                            <div class="tab-pane fade in active" id="mygroupcontainer">
+                                <table id = "mygrouptable" class="table table-condensed table-hover table-striped" >
+                                    <tr>
+                                        <td>小组id</td>
+                                        <td>小组名</td>
+                                        <td>组长id</td>
+                                        <td>组长名</td>
+                                        <td>课程id</td>
+                                        <td>课程名</td>
+                                    </tr>
+                                    <tr th:each="grp:${grouplist}">
+
+                                        <td th:text="${grp.getGroupid()}"></td>
+                                        <td th:text="${grp.getGroupname()}"></td>
+                                        <td th:text="${grp.getLeaderid()}"></td>
+                                        <td th:text="${grp.getLeadername()}"></td>
+                                        <td th:text="${grp.getCourseid()}"></td>
+                                        <td th:text="${grp.getCoursename()}"></td>
+                                        <form th:action="@{/group/quit}" th:method="post">
+                                            <input type="hidden" name="userid" th:value = "${theUser.getUserid()}"/>
+                                            <input type="hidden" name="userid" th:value = "${grp.getGroupid()}"/>
+                                            <td><input type="submit" class="btn btn-danger" value="退出" /></td>
+                                        </form>
+                                    </tr>
+                                </table>
+
+                            </div>
+                            <div class="tab-pane fade" id="leadgroupcontainer">
+                                <table id = "leadgrouptable" class="table table-condensed table-hover table-striped" >
+                                    <tr>
+                                        <td>小组id</td>
+                                        <td>小组名</td>
+                                        <td>组长id</td>
+                                        <td>组长名</td>
+                                        <td>课程id</td>
+                                        <td>课程名</td>
+                                    </tr>
+                                    <tr th:each="grp:${leadgrouplist}">
+                                        <td th:text="${grp.getGroupid()}"></td>
+                                        <td th:text="${grp.getGroupname()}"></td>
+                                        <td th:text="${grp.getLeaderid()}"></td>
+                                        <td th:text="${grp.getLeadername()}"></td>
+                                        <td th:text="${grp.getCourseid()}"></td>
+                                        <td th:text="${grp.getCoursename()}"></td>
+                                        <td><button class="btn btn-primary leadgroupmanagebtn"  data-toggle="modal" data-target="#groupmanageModal" th:value="${grp.getGroupid()}"/>管理</td>
+                                        <form th:action="@{/group/dismiss}" th:method="post">
+                                            <input type="hidden" name="groupid" th:value = "${grp.getGroupid()}"/>
+                                            <td><input type="submit" class="btn btn-danger" value="解散" /></td>
+                                        </form>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="tab-pane fade" id="applygroupcontainer">
+                                <table id = "applygrouptable" class="table table-condensed table-hover table-striped" >
+                                    <tr>
+                                        <td>小组id</td>
+                                        <td>小组名</td>
+                                        <td>组长id</td>
+                                        <td>组长名</td>
+                                        <td>课程id</td>
+                                        <td>课程名</td>
+                                    </tr>
+                                    <tr th:each="grp:${applygrouplist}">
+                                        <td th:text="${grp.getGroupid()}"></td>
+                                        <td th:text="${grp.getGroupname()}"></td>
+                                        <td th:text="${grp.getLeaderid()}"></td>
+                                        <td th:text="${grp.getLeadername()}"></td>
+                                        <td th:text="${grp.getCourseid()}"></td>
+                                        <td th:text="${grp.getCoursename()}"></td>
+                                        <form th:action="@{/group/dissmiss}" th:method="post">
+                                            <input type="hidden" name="userid" th:value = "${grp.getGroupid()}"/>
+                                            <td><input type="submit" class="btn btn-danger" value="放弃" /></td>
+                                        </form>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="tab-pane fade" id="rankcontainer">
+                    <h3 class="page-header">积分排行</h3>
+                    <h5 style="color:#aaa; margin-top:10px">score rank</h5>
+                    <div style="width: 50%; margin: 0 auto">
+                        <table class="table table-condensed table-hover table-striped" >
+                            <tr>
+                                <td>用户id</td>
+                                <td>头像</td>
+                                <td>用户名</td>
+                                <td>积分</td>
+                                <td>排名</td>
+                            </tr>
+                            <tr>
+                                <td th:text="${Studentrank.getStudentid()}"></td>
+                                <td>
+                                    <img th:src="@{/img/profile/user_{filename}(filename=${Studentrank.getProfile()})}" class="img-circle" style="width: 25px; height: 25px; margin-left: 10px"/>
+                                </td>
+                                <td th:text="${Studentrank.getStudentname()}"></td>
+                                <td th:text="${Studentrank.getScore()}"></td>
+                                <td th:text="${Studentrank.getRank()}"></td>
+                            </tr>
+                        </table>
+
+                        <table class="table table-condensed table-hover table-striped" >
+                            <tr>
+                                <td>用户id</td>
+                                <td>头像</td>
+                                <td>用户名</td>
+                                <td>积分</td>
+                                <td>排名</td>
+                            </tr>
+                            <tr th:each="rank:${studentranklist}">
+                                <td th:text="${rank.getStudentid()}"></td>
+                                <td>
+                                    <img th:src="@{/img/profile/user_{filename}(filename=${rank.getProfile()})}" class="img-circle" style="width: 25px; height: 25px; margin-left: 10px"/>
+                                </td>
+                                <td th:text="${rank.getStudentname()}"></td>
+                                <td th:text="${rank.getScore()}"></td>
+                                <td th:text="${rank.getRank()}"></td>
+                            </tr>
+                        </table>
+                    </div>
+
+
+                </div>
+                <div class="tab-pane fade" id="newscontainer">
+                    <h3 class="page-header">消息</h3>
+                    <h5 style="color:#aaa; margin-top:10px">news</h5>
+                    <table class="table table-condensed table-hover table-striped" >
+                        <tr>
+                            <td>发送人</td>
+                            <td>接收人</td>
+                            <td>题目</td>
+                            <td>时间</td>
+                        </tr>
+                        <tr th:each="news:${newslist}">
+                            <td th:text="${news.getSendername()}"></td>
+                            <td th:text="${news.getReceivername()}"></td>
+                            <td>
+                                <form th:action="@{/news}" th:method="post">
+                                    <input type="hidden" name="newsid" th:value = "${news.getNewsid()}"/>
+                                    <p><span th:if = "${news.getRead()} eq 0" class="label label-success">new!</span><button type="submit" class = "btn btn-link" th:text="${news.getTitle()}"></button></p>
+                                </form>
+
+                            </td>
+                            <td th:text="${news.getTime()}"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id = "bot">im bottom</div>
+    <div class="modal fade" id="groupmanageModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="margin-top: 100px">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="progressModalLabel">管理小组</h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="managegroupcheckgroupid"/>
+                    <ul id="applylistTab" class="nav nav-tabs nav-justified">
+                        <li class="active">
+                            <a href="#applylistcontainer" data-toggle="tab">
+                                申请列表
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#memberlistcontainer" data-toggle="tab">
+                                成员列表
+                            </a>
+                        </li>
+                    </ul>
+                    <div id="managegroupContent" class="tab-content">
+                        <div class="tab-pane fade in active" id="applylistcontainer">
+                            <table id = "applylisttable" class="table table-condensed table-hover table-striped" >
+                                <tr>
+                                    <td>用户id</td>
+                                    <td>头像</td>
+                                    <td>用户名</td>
+                                </tr>
+                            </table>
+                            <div id = "applymemberlistcontainer"></div>
+                        </div>
+                        <div class="tab-pane fade" id="memberlistcontainer">
+                            <table id = "memberlisttable" class="table table-condensed table-hover table-striped" >
+                                <tr>
+                                    <td>用户id</td>
+                                    <td>头像</td>
+                                    <td>用户名</td>
+                                    <td>联系电话</td>
+                                    <td>邮箱</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger">添加</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="passwordupdateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="margin-top: 100px">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="passwordupdateModalLabel">密码修改</h4>
+                </div>
+                <div class="modal-body">
+                    <form id = "passwordupdateForm" th:action="@{../user/passwordupdate}" th:method="post" enctype="multipart/form-data">
+                        <input class = "studentid" type="hidden" name="userid" th:value="${theUser.userid}"/>
+                        <div class="input-group">
+                            <span class="input-group-addon">原密码</span>
+                            <input type="text" class="form-control" name="password"/>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-addon">新密码</span>
+                            <input type="text" class="form-control" name="newpassword"/>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">修改</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>>
+</body>
+</html>

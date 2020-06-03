@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<link href="../css/progressHome.css" rel="stylesheet" type="text/css">
+<link href="../css/home.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.staticfile.org/jquery/3.4.0/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="//cdn.bootcss.com/echarts/4.2.1-rc1/echarts.min.js"></script>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script th:inline = "javascript">
+        $(document).ready(function(){
+            /*console.log([[${isExist}]]);
+            console.log([[${theUser}]]);*/
+            if([[${isExist}]]==true){
+                $("#userhead").text([[${theUser.username}]]);
+                $("#userdrag").append("<li><a href=\"/user\">用户中心</a></li>");
+                $("#userdrag").append("<li><a id = \"logout\">登出</a></li>");
+                $("#userprofile").attr("src", "../img/profile/user_" + [[${theUser.getProfile()}]]);
+                $("#logout").click(function () {
+                    $.removeCookie('userid',{ path: '/'});
+                    $.removeCookie('userpassword',{ path: '/'});
+                    $(location).attr('href', '../');
+                });
+            }else{
+                $("#userhead").text("用户");
+                $("#userdrag").append("<li><a href=\"/user/loginuser\">登录</a></li>");
+                $("#userdrag").append("<li><a href=\"/user/insertuser\">注册</a></li>");
+            }
+        });
+    </script>
+    <script th:inline = "javascript">
+        $(document).ready(function(){
+            $(".getprogressbtn").click(function () {
+                $(".scorecontainer").remove();
+                $.post("../progress/chapterprogress", {
+                    "studentid": [[${theUser.userid}]],
+                    "courseid": $(this).attr("value")
+                },function (res) {
+                    var rate = 0;
+                    var sum = 0;
+                    $.each(res, function (i,val) {
+                        sum++;
+                        if(val.isDone){
+                            rate++;
+                            $("#scoretable").append("<tr class = \"scorecontainer\">\n" +
+                                "                            <td>" + val.crspointname + "</td>\n" +
+                                "                            <td>" + val.score + "</td>\n" +
+                                "                        </tr>");
+                        }else{
+                            $("#scoretable").append("<tr class = \"scorecontainer\">\n" +
+                                "                            <td>" + val.crspointname + "</td>\n" +
+                                "                            <td>未完成</td>\n" +
+                                "                        </tr>");
+                        }
+                    })
+                    printPie(rate, sum);
+                })
+
+                $.post("../progress/chart", {
+                    "studentid": [[${theUser.userid}]],
+                    "courseid": $(this).attr("value")
+                },function (res) {
+                    printchart(res.choicescore, res.choicesum, res.fillinscore, res.fillinsum, res.tfscore, res.tfsum, res.sqscore, res.sqsum, res.qscore, res.qsum);
+                })
+
+                $.post("../progress/examprogress", {
+                    "studentid": [[${theUser.userid}]],
+                    "courseid": $(this).attr("value")
+                },function (res) {
+                    $.each(res, function (i,val) {
+                        if(val.isDone){
+                            $("#scoretable").append("<tr class = \"scorecontainer\">\n" +
+                                "                            <td>" + val.examname + "</td>\n" +
+                                "                            <td>" + val.score + "</td>\n" +
+                                "                        </tr>");
+                        }else{
+                            $("#scoretable").append("<tr class = \"scorecontainer\">\n" +
+                                "                            <td>" + val.examname + "</td>\n" +
+                                "                            <td>未完成</td>\n" +
+                                "                        </tr>");
+                        }
+                    })
+                })
+            })
+        })
+    </script>
+    <script>
+        function printPie(rate, sum) {
+            var myecharts = echarts.init(document.getElementById("progresscharts"));
+            option = {
+                title : {
+                    text : '知识点完成度',
+                },
+                tooltip : {
+                    trigger : 'item',
+                    formatter : "{a} <br/>{b} : {c} ({d}%)"
+                },
+                series : [ {
+                    name : '值域占比',
+                    type : 'pie',
+                    radius : '55%',
+                    center : [ '50%', '50%' ],
+                    data :[ {
+                        value : rate,
+                        name : '已完成'
+                    }, {
+                        value : sum-rate,
+                        name : '未完成'
+                    }],
+                    itemStyle : {
+                        emphasis : {
+                            shadowBlur : 10,
+                            shadowOffsetX : 0,
+                            shadowColor : 'rgba(0, 0, 0, 0.5)'
+                        },
+                        normal : {
+                            label : {
+                                show : true,
+                                formatter : '{b}-{d}%',
+                            },
+                            lableLine : {
+                                show : true
+                            }
+                        }
+                    }
+                } ]
+            };
+
+            myecharts.setOption(option);
+        }
+        function printchart(choicescore, choicesum, fillinscore, fillinsum, tfscore, tfsum, sqscore, sqsum, qscore, qsum){
+            var chart1 = echarts.init(document.getElementById("scorecharts"));
+
+            // 指定图表的配置项和数据
+            var option = {
+                title : {
+                    text : '题目正确率',
+                },
+                tooltip: {
+                    trigger: "item",
+                },
+                toolbox: {
+                    show: false,
+                    feature: {
+                        mark: {
+                            show: true
+                        },
+                        dataView: {
+                            show: true,
+                            readOnly: false
+                        },
+                        restore: {
+                            show: true
+                        },
+                        saveAsImage: {
+                            show: true
+                        }
+                    }
+                },
+                polar: [
+                    {
+                        indicator: [
+                            {
+                                text: "总题 " + qsum,
+                                max: qsum,
+
+                            },
+                            {
+                                text: "选择 " + choicesum,
+                                min: 0,
+                                max: choicesum
+                            },
+                            {
+                                text: "填空 " + fillinsum,
+                                min: 0,
+                                max: fillinsum
+                            },
+                            {
+                                text: "判断 " + tfsum,
+                                min: 0,
+                                max: tfsum
+                            },
+                            {
+                                text: "主观 " + sqsum,
+                                min: 0,
+                                max: sqsum
+                            }
+                        ],
+                        type: "polygon",
+                    }
+                ],
+                calculable: true,
+                series: [
+                    {
+                        name: "",
+                        type: "radar",
+                        data: [
+                            {
+                                value: [qscore, choicescore, fillinscore, sqscore, sqscore],
+                                name: "题目正确率"
+                            }
+                        ],
+                        symbolSize: 5
+                    }
+                ],
+                animation: true,
+                animationEasing: "ExponentialOut"
+            };
+
+            // 使用刚指定的配置项和数据显示图表
+            chart1.setOption(option)
+
+        }
+    </script>
+</head>
+
+<body>
+<div class="top">
+    <ul>
+        <li><a href="../">首页</a></li>
+        <li><a>课程中心</a>
+            <ul>
+                <li><a href="../course">选课中心</a></li>
+                <li><a href="../chapter">已选课程</a></li>
+                <li><a href="../course/manage">课程管理</a></li>
+            </ul>
+        </li>
+        <li><a href="../exam">考试中心</a></li>
+        <li><a style="background-color: grey;">学习记录</a>
+            <ul>
+                <li><a href="../progress">学习进度</a></li>
+                <li><a href="../score">成绩查询</a></li>
+            </ul>
+        </li>
+        <li style="float: right">
+            <a id = "userhead"></a>
+            <ul style="right:0" id = "userdrag" >
+            </ul>
+        </li>
+        <li style="float: right">
+            <img id = "userprofile" src = "../img/profile/user_0.png" class="img-circle" style="width: 40px; height: 40px; margin-top: 5px; margin-left: 50px"/>
+        </li>
+    </ul>
+</div>
+<div class="mainpage">
+    <h3 class="page-header">学习进度</h3>
+    <h5 style="color:#aaa; margin-top:10px">Learning Progress</h5>
+    <table id = "coursetable" class="table table-condensed table-hover table-striped" >
+        <tr>
+            <td>课程序号</td>
+            <td>课程名</td>
+            <td>教师序号</td>
+            <td>教师名</td>
+        </tr>
+        <tr th:each="crs:${selectedlist}">
+            <td th:text="${crs.getCourseid()}"></td>
+            <td th:text="${crs.getCoursename()}"></td>
+            <td th:text="${crs.getTeacherid()}"></td>
+            <td th:text="${crs.getTeachername()}"></td>
+            <td>
+                <button class="btn btn-primary getprogressbtn"  data-toggle="modal" data-target="#progressModal" th:value = "${crs.getCourseid()}">查看进度</button>
+            </td>
+
+        </tr>
+    </table>
+
+    <div class="modal fade" id="progressModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog"  style="width:850px;height: 500px">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="progressModalLabel">进度查询</h4>
+                </div>
+                <div class="modal-body">
+                    <div id = "progresscharts" style="width:400px; height:300px; float: left"></div>
+                    <div id = "scorecharts" style="width:400px; height:300px; float: left"></div>
+                    <table id = "scoretable" class="table table-condensed table-hover table-striped" >
+                        <tr>
+                            <td>知识点测试/考试</td>
+                            <td>成绩</td>
+                        </tr>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

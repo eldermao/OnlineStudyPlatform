@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<link href="../css/home.css" rel="stylesheet" type="text/css">
+<link href="../css/courseManage.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.staticfile.org/jquery/3.4.0/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="//cdn.bootcss.com/echarts/4.2.1-rc1/echarts.min.js"></script>
+<script src="../js/jquery.form.js"></script>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script>
+        $(document).ready(function(){
+            $('#imgshow').click(function(){
+                $('#uploadimgbtn').click();
+            });
+            $("#uploadimgbtn").change(function(){
+                var file = $(this).get(0).files[0];
+                var reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload=function(e){
+                    console.log(e);
+                    $("#imgshow").get(0).src = e.target.result;
+                }
+            })
+
+            $("#studentnewsForm").ajaxForm(function (data) {
+                alert(data);
+            });
+
+            $("#crsinsertForm").ajaxForm(function (data) {
+                alert(data);
+            });
+        })
+    </script>
+
+    <script th:inline = "javascript">
+        $(document).ready(function(){
+
+            $(".studentmanagebtn").click(function () {
+                $("#courseidinputer").val($(this).val());
+                $(".courseidinputer").val($(this).val());
+                $(".studentcontainer").remove();
+                $.post("../course/studentmanage", {
+                    "courseid": $(this).val()
+                },function (res) {
+                    $.each(res, function (i,val) {
+                        $("#studenttable").append("<tr class = \"studentcontainer\">\n" +
+                            "                            <td>" + val.userid + "</td>\n" +
+                            "                            <td>" + val.username + "</td>\n" +
+                            "                            <td>" + val.userphone + "</td>\n" +
+                            "                            <td>" + val.useremail + "</td>\n" +
+                            "                            <td>\n" +
+                            "                                <button class=\"btn btn-primary studentprogressbtn\"  data-toggle=\"modal\" data-target=\"#progressModal\" value = \"" + val.userid + "\">查看学习进度</button>\n" +
+                            "                            </td>\n" +
+                            "                            <td>\n" +
+                            "                                <button class=\"btn btn-primary studentnewsbtn\"  data-toggle=\"modal\" data-target=\"#newsModal\" value = \"" + val.userid + "\">发送消息</button>\n" +
+                            "                            </td>\n" +
+                            "                            <td>\n" +
+                            "                                <button class=\"btn btn-primary studentscorebtn\"  data-toggle=\"modal\" data-target=\"#scoreModal\" value = \"" + val.userid + "\">成绩评定</button>\n" +
+                            "                            </td>\n" +
+                            "                            <td>\n" +
+                            "                                <button class=\"btn btn-danger studentpopbtn\" value = \"" + val.userid + "\">删除</button>\n" +
+                            "                            </td>\n" +
+                            "                        </tr>");
+                    })
+                })
+            })
+
+        })
+    </script>
+    <script th:inline = "javascript">
+        $(document).ready(function(){
+            /*console.log([[${isExist}]]);
+            console.log([[${theUser}]]);*/
+            if([[${isExist}]]==true){
+                $("#userhead").text([[${theUser.username}]]);
+                $("#userdrag").append("<li><a href=\"/user\">用户中心</a></li>");
+                $("#userdrag").append("<li><a id = \"logout\">登出</a></li>");
+                $("#userprofile").attr("src", "../img/profile/user_" + [[${theUser.getProfile()}]]);
+                $("#logout").click(function () {
+                    $.removeCookie('userid',{ path: '/'});
+                    $.removeCookie('userpassword',{ path: '/'});
+                    $(location).attr('href', '../');
+                });
+            }else{
+                $("#userhead").text("用户");
+                $("#userdrag").append("<li><a href=\"/user/loginuser\">登录</a></li>");
+                $("#userdrag").append("<li><a href=\"/user/insertuser\">注册</a></li>");
+            }
+        });
+    </script>
+
+    <script th:inline = "javascript">
+        $(document).ready(function(){
+            $("#studenttable").on("click", ".studentprogressbtn", function () {
+                $(".scorecontainer").remove();
+                $.post("../progress/chapterprogress", {
+                    "studentid": $(this).attr("value"),
+                    "courseid": $("#courseidinputer").attr("value")
+                },function (res) {
+                    var rate = 0;
+                    var sum = 0;
+                    $.each(res, function (i,val) {
+                        sum++;
+                        if(val.isDone){
+                            rate++;
+                            $("#scoretable").append("<tr class = \"scorecontainer\">\n" +
+                                "                            <td>" + val.crspointname + "</td>\n" +
+                                "                            <td>" + val.score + "</td>\n" +
+                                "                        </tr>");
+                        }else{
+                            $("#scoretable").append("<tr class = \"scorecontainer\">\n" +
+                                "                            <td>" + val.crspointname + "</td>\n" +
+                                "                            <td>未完成</td>\n" +
+                                "                        </tr>");
+                        }
+                    })
+                    printPie(rate, sum);
+                })
+
+                $.post("../progress/chart", {
+                    "studentid": $(this).attr("value"),
+                    "courseid": $("#courseidinputer").attr("value")
+                },function (res) {
+                    printchart(res.choicescore, res.choicesum, res.fillinscore, res.fillinsum, res.tfscore, res.tfsum, res.sqscore, res.sqsum, res.qscore, res.qsum);
+                })
+            })
+
+            $("#studenttable").on("click", ".studentnewsbtn", function () {
+                $(".studentid").val($(this).val());
+            })
+            $("#studenttable").on("click", ".studentscorebtn", function () {
+                $(".studentid").val($(this).val());
+            })
+
+            $("#studenttable").on("click", ".studentpopbtn", function () {
+                $.post("../course/studentpop", {
+                    "studentid": $(this).attr("value"),
+                    "courseid": $("#courseidinputer").attr("value")
+                },function (res) {
+                    alert(res);
+                    location.reload();
+                })
+            })
+        })
+    </script>
+
+    <script>
+        function printPie(rate, sum) {
+            var myecharts = echarts.init(document.getElementById("progresscharts"));
+            option = {
+                title : {
+                    text : '知识点完成度',
+                },
+                tooltip : {
+                    trigger : 'item',
+                    formatter : "{a} <br/>{b} : {c} ({d}%)"
+                },
+                series : [ {
+                    name : '值域占比',
+                    type : 'pie',
+                    radius : '55%',
+                    center : [ '50%', '50%' ],
+                    data :[ {
+                        value : rate,
+                        name : '已完成'
+                    }, {
+                        value : sum-rate,
+                        name : '未完成'
+                    }],
+                    itemStyle : {
+                        emphasis : {
+                            shadowBlur : 10,
+                            shadowOffsetX : 0,
+                            shadowColor : 'rgba(0, 0, 0, 0.5)'
+                        },
+                        normal : {
+                            label : {
+                                show : true,
+                                formatter : '{b}-{d}%',
+                            },
+                            lableLine : {
+                                show : true
+                            }
+                        }
+                    }
+                } ]
+            };
+
+            myecharts.setOption(option);
+        }
+        function printchart(choicescore, choicesum, fillinscore, fillinsum, tfscore, tfsum, sqscore, sqsum, qscore, qsum){
+            var chart1 = echarts.init(document.getElementById("scorecharts"));
+
+            // 指定图表的配置项和数据
+            var option = {
+                title : {
+                    text : '题目正确率',
+                },
+                tooltip: {
+                    trigger: "item",
+                },
+                toolbox: {
+                    show: false,
+                    feature: {
+                        mark: {
+                            show: true
+                        },
+                        dataView: {
+                            show: true,
+                            readOnly: false
+                        },
+                        restore: {
+                            show: true
+                        },
+                        saveAsImage: {
+                            show: true
+                        }
+                    }
+                },
+                polar: [
+                    {
+                        indicator: [
+                            {
+                                text: "总题 " + qsum,
+                                max: qsum,
+
+                            },
+                            {
+                                text: "选择 " + choicesum,
+                                min: 0,
+                                max: choicesum
+                            },
+                            {
+                                text: "填空 " + fillinsum,
+                                min: 0,
+                                max: fillinsum
+                            },
+                            {
+                                text: "判断 " + tfsum,
+                                min: 0,
+                                max: tfsum
+                            },
+                            {
+                                text: "主观 " + sqsum,
+                                min: 0,
+                                max: sqsum
+                            }
+                        ],
+                        type: "polygon",
+                    }
+                ],
+                calculable: true,
+                series: [
+                    {
+                        name: "",
+                        type: "radar",
+                        data: [
+                            {
+                                value: [qscore, choicescore, fillinscore, sqscore, sqscore],
+                                name: "题目正确率"
+                            }
+                        ],
+                        symbolSize: 5
+                    }
+                ],
+                animation: true,
+                animationEasing: "ExponentialOut"
+            };
+
+            // 使用刚指定的配置项和数据显示图表
+            chart1.setOption(option)
+
+        }
+    </script>
+
+</head>
+<body>
+<div class="top">
+    <ul>
+        <li><a href="../">首页</a></li>
+        <li><a style="background-color: grey;">课程中心</a>
+            <ul>
+                <li><a href="../course">选课中心</a></li>
+                <li><a href="../chapter">已选课程</a></li>
+                <li><a href="../course/manage">课程管理</a></li>
+            </ul>
+        </li>
+        <li><a>考试中心</a>
+            <ul>
+                <li><a href="../exam">我的考试</a></li>
+                <li><a href="../exam/manage">考试管理</a></li>
+            </ul>
+        </li>
+        <li><a>学习记录</a>
+            <ul>
+                <li><a href="../progress">学习进度</a></li>
+                <li><a href="../score">成绩查询</a></li>
+            </ul>
+        </li>
+        <li style="float: right">
+            <a id = "userhead"></a>
+            <ul style="right:0" id = "userdrag" >
+            </ul>
+        </li>
+        <li style="float: right">
+            <img id = "userprofile" src = "../img/profile/user_0.png" class="img-circle" style="width: 40px; height: 40px; margin-top: 5px; margin-left: 50px"/>
+        </li>
+    </ul>
+</div>
+<div class="mainpage">
+    <h3 class="page-header">教授课程列表</h3>
+    <h5 style="color:#aaa; margin-top:10px">Teachering Course List</h5>
+    <table id = "coursetable" class="table table-condensed table-hover table-striped" >
+        <tr>
+            <td>课程id</td>
+            <td>课程名</td>
+            <td>教师id</td>
+            <td>教师名</td>
+            <td>课容量</td>
+            <td>管理操作</td>
+        </tr>
+        <tr class = "coursecontainer" th:each="crs:${courseList}">
+            <td th:text="${crs.getCourseid()}"></td>
+            <td th:text="${crs.getCoursename()}"></td>
+            <td th:text="${crs.getTeacherid()}"></td>
+            <td th:text="${crs.getTeachername()}"></td>
+            <td th:text="${crs.getMax()}"></td>
+            <td>
+                <button class="btn btn-primary studentmanagebtn"  data-toggle="modal" data-target="#studentModal" th:value = "${crs.getCourseid()}">学生管理</button>
+            </td>
+            <td>
+                <form th:action="@{../chapter/manage}" th:method="post">
+                    <input type="hidden" name="courseid" th:value = "${crs.getCourseid()}"/>
+                    <button id = "coursemanagebtn" class="btn btn-primary">课程管理</button>
+                </form>
+
+            </td>
+        </tr>
+    </table>
+    <button id = "coursecreatebtn" class="btn btn-primary"  data-toggle="modal" data-target="#coursecreateModal">添加课程</button>
+    <div class="modal fade" id="studentModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="width:800px;height: 500px">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">学生管理</h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id = "courseidinputer"/>
+                    <table id = "studenttable" class="table table-condensed table-hover table-striped" >
+                        <tr>
+                            <td>学生id</td>
+                            <td>学生名</td>
+                            <td>联系电话</td>
+                            <td>邮箱</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="progressModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog"   style="width:850px;height: 500px">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="progressModalLabel">进度查看</h4>
+                </div>
+                <div class="modal-body">
+                    <div id = "progresscharts" style="width:400px; height:300px; float: left"></div>
+                    <div id = "scorecharts" style="width:400px; height:300px; float: left"></div>
+                    <table id = "scoretable" class="table table-condensed table-hover table-striped" >
+                        <tr>
+                            <td>知识点测试/考试</td>
+                            <td>成绩</td>
+                        </tr>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="coursecreateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="margin-top: 100px">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="coursecreateModalLabel">添加课程</h4>
+                </div>
+                <div class="modal-body">
+                    <img id ="imgshow" class="img-thumbnail" src = "../img/coursePic/crs_0.jpg" width="100px" height="100px"/>
+
+                    <form th:action="@{../course/create}" th:method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="teacherid" th:value = "${theUser.getUserid()}"/>
+                        <input type="file" id = "uploadimgbtn" accept="image/*" name="imgfile"  style="display: none"/>
+                        <div class="input-group">
+                            <span class="input-group-addon">课程名</span>
+                            <input type="text" class="form-control" name="coursename"/>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-addon">课容量</span>
+                            <input type="text" class="form-control" name="max"/>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">添加</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="newsModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="margin-top: 100px">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="newsModalLabel">消息发送</h4>
+                </div>
+                <div class="modal-body">
+                    <form id = "studentnewsForm" th:action="@{../news/insert}" th:method="post" enctype="multipart/form-data">
+                        <input class = "studentid" type="hidden" name="receiverid"/>
+                        <input type="hidden" name="senderid" th:value = "${theUser.getUserid()}"/>
+                        <div class="input-group">
+                            <span class="input-group-addon">标题</span>
+                            <input type="text" class="form-control" name="title"/>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-addon">内容</span>
+                            <textarea type="textarea" class="form-control" name="content"  rows="5" style = "resize: none;"></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">添加</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="scoreModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="margin-top: 100px">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="scoreModalLabel">成绩评定</h4>
+                </div>
+                <div class="modal-body">
+                    <form id = "crsinsertForm" th:action="@{../score/crsinsert}" th:method="post" enctype="multipart/form-data">
+                        <input type="hidden" class = "courseidinputer" name="courseid"/>
+                        <input class = "studentid" type="hidden" name="studentid"/>
+                        <div class="input-group">
+                            <span class="input-group-addon">成绩</span>
+                            <input type="text" class="form-control" name="score"/>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">添加</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

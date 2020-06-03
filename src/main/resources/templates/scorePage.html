@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<link href="../css/home.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.staticfile.org/jquery/3.4.0/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script th:inline = "javascript">
+        $(document).ready(function(){
+            /*console.log([[${isExist}]]);
+            console.log([[${theUser}]]);*/
+            if([[${isExist}]]==true){
+                $("#userhead").text([[${theUser.username}]]);
+                $("#userdrag").append("<li><a href=\"/user\">用户中心</a></li>");
+                $("#userdrag").append("<li><a id = \"logout\">登出</a></li>");
+                $("#userprofile").attr("src", "../img/profile/user_" + [[${theUser.getProfile()}]]);
+                $("#logout").click(function () {
+                    $.removeCookie('userid',{ path: '/'});
+                    $.removeCookie('userpassword',{ path: '/'});
+                    $(location).attr('href', '../');
+                });
+            }else{
+                $("#userhead").text("用户");
+                $("#userdrag").append("<li><a href=\"/user/loginuser\">登录</a></li>");
+                $("#userdrag").append("<li><a href=\"/user/insertuser\">注册</a></li>");
+            }
+        });
+    </script>
+    <script th:inline = "javascript">
+        $(document).ready(function(){
+            $("#searchscorebtn").click(function () {
+                $(".scorelist").remove();
+                $.post("../score/search", {
+                    "studentid": [[${theUser.userid}]],
+                    "content": $("#seachscoreinputer").val()
+                },function (res) {
+                    $.each(res, function (i,val) {
+                        $("#scoretable").append("<tr class = \"scorelist\">\n" +
+                            "            <td>" + val.courseid + "</td>\n" +
+                            "            <td>" + val.coursename + "</td>\n" +
+                            "            <td>" + val.teachername + "</td>\n" +
+                            "            <td>" + val.max + "</td>\n" +
+                            "            <td>" + val.sum + "</td>\n" +
+                            "            <td>" + val.score + "</td>\n" +
+                            "            <td>" + val.rank + "</td>\n" +
+                            "        </tr>");
+                    })
+                })
+            })
+        })
+    </script>
+</head>
+<body>
+<div class="top">
+    <ul>
+        <li><a href="../">首页</a></li>
+        <li><a>课程中心</a>
+            <ul>
+                <li><a href="../course">选课中心</a></li>
+                <li><a href="../chapter">已选课程</a></li>
+                <li><a href="../course/manage">课程管理</a></li>
+            </ul>
+        </li>
+        <li><a href="../exam">考试中心</a></li>
+        <li><a style="background-color: grey;">学习记录</a>
+            <ul>
+                <li><a href="../progress">学习进度</a></li>
+                <li><a href="../score">成绩查询</a></li>
+            </ul>
+        </li>
+        <li style="float: right">
+            <a id = "userhead"></a>
+            <ul style="right:0" id = "userdrag" >
+            </ul>
+        </li>
+        <li style="float: right">
+            <img id = "userprofile" src = "../img/profile/user_0.png" class="img-circle" style="width: 40px; height: 40px; margin-top: 5px; margin-left: 50px"/>
+        </li>
+    </ul>
+</div>
+<div class="mainpage">
+    <h3 class="page-header">成绩查询</h3>
+    <h5 style="color:#aaa; margin-top:10px">Score Inquiry</h5>
+    <div>通过课程号/课程名/授课老师搜索</div>
+    <div class="input-group"  styLe="width:50%; margin: 0 auto;">
+        <input id = "seachscoreinputer" type="text" class="form-control" placeholder="输入关键字...">
+        <span class="input-group-btn">
+            <button id = "searchscorebtn" class="btn btn-default" type="button">
+                搜索
+            </button>
+        </span>
+    </div>
+    <table id = "scoretable" class="table table-condensed table-hover table-striped" >
+        <tr>
+            <td>课程号</td>
+            <td>课程名</td>
+            <td>授课老师</td>
+            <td>课容量</td>
+            <td>考试人数</td>
+            <td>分数</td>
+            <td>排名</td>
+        </tr>
+        <tr class = "scorelist" th:each="scr:${scorelist}">
+            <td th:text="${scr.getCourseid()}"></td>
+            <td th:text="${scr.getCoursename()}"></td>
+            <td th:text="${scr.getTeachername()}"></td>
+            <td th:text="${scr.getMax()}"></td>
+            <td th:text="${scr.getSum()}"></td>
+            <td th:text="${scr.getScore()}"></td>
+            <td th:text="${scr.getRank()}"></td>
+        </tr>
+    </table>
+
+</div>
+</body>
+</html>

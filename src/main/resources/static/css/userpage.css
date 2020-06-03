@@ -1,0 +1,15 @@
+#maincontainer{
+    margin:0 auto;
+    height:auto;
+    overflow: hidden;
+}
+#leftcontainer{
+    position: relative;
+    width:200px;
+    float: left;
+}
+#rightcontainer{
+    position: relative;
+    height:600px;
+    margin-left:200px;
+}

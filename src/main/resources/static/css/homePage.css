@@ -1,0 +1,50 @@
+#studentrank{
+    width:50%;
+    height: 100%;
+    float:left;
+}
+#grouprank{
+    width:50%;
+    height: 100%;
+    float:left;
+}
+.recommandcontainer{
+    width: 250px;
+    height: 260px;
+    margin: 0 auto
+}
+.imgbox{
+    width: 150px !important; height: 150px !important;
+}
+@media screen and (max-width: 1200px) {
+    .recommandcontainer {
+        width: 200px;
+        height: 200px;
+    }
+    .imgbox{
+        width: 120px !important; height: 120px !important;
+    }
+
+}
+/* 设置了浏览器宽度不大于1200px时 abc 显示900px宽度 */
+
+@media screen and (max-width: 1000px) {
+    .recommandcontainer {
+        width: 150px;
+        height: 150px;
+    }
+    .imgbox{
+        width: 80px !important; height: 80px !important;
+    }
+}
+/* 设置了浏览器宽度不大于900px时 abc 显示200px宽度 */
+
+@media screen and (max-width: 800px) {
+    .recommandcontainer {
+        width: 100px;
+        height: 100px;
+    }
+    .imgbox{
+        width: 50px !important; height: 50px !important;
+    }
+}

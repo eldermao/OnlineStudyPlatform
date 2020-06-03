@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<link href="../css/home.css" rel="stylesheet" type="text/css">
+<link href="../css/homePage.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.staticfile.org/jquery/3.4.0/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="../js/jquery.form.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $("#registForm").ajaxForm(function (data) {
+                alert("您的账号为："+data+"\n请牢记。");
+                $(location).attr('href', '../user/loginuser');
+            });
+        })
+    </script>
+
+
+</head>
+<body>
+<div class="top">
+    <ul>
+        <li><a href="../" style="background-color: grey;">首页</a></li>
+        <li><a>课程中心</a>
+            <ul>
+                <li><a href="../course">选课中心</a></li>
+                <li><a href="../chapter">已选课程</a></li>
+                <li><a href="../course/manage">课程管理</a></li>
+            </ul>
+        </li>
+        <li><a>考试中心</a>
+            <ul>
+                <li><a href="../exam">我的考试</a></li>
+                <li><a href="../exam/manage">考试管理</a></li>
+            </ul>
+        </li>
+        <li><a>学习记录</a>
+            <ul>
+                <li><a href="../progress">学习进度</a></li>
+                <li><a href="../score">成绩查询</a></li>
+            </ul>
+        </li>
+    </ul>
+</div>
+<div class = "mainpage">
+    <div class="panel panel-default" style="width: 300px; height: 370px; margin: 0 auto; margin-top: 50px">
+        <div class="panel-heading">
+            <h3 class="panel-title">登录</h3>
+        </div>
+        <div class="panel-body">
+            <form id = "registForm" th:action="@{/user/insert}" th:method="post">
+                <div class="input-group input-group">
+                    <span class="input-group-addon">用户名</span>
+                    <input type="text" class="form-control" name="username" >
+                </div>
+                <div class="input-group input-group">
+                    <span class="input-group-addon">密码</span>
+                    <input type="text" class="form-control" name="userpassword" >
+                </div>
+                <div class="input-group input-group">
+                    <span class="input-group-addon">年龄</span>
+                    <input type="text" class="form-control" name="userage" >
+                </div>
+                <div class="input-group input-group">
+                    <span class="input-group-addon">联系电话</span>
+                    <input type="text" class="form-control" name="userphone" >
+                </div>
+                <div class="input-group input-group">
+                    <span class="input-group-addon">邮箱</span>
+                    <input type="text" class="form-control" name="useremail" >
+                </div>
+                <button type="submit" class="btn btn-primary" style="margin-top: 30px">注册</button>
+            </form>
+            <button type="button" class="btn btn-link" style="margin-top: 10px" ><a href = "../user/loginuser">返回登录</a></button>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
